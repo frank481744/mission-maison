@@ -1,305 +1,90 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#111827" />
-  <title>Mission Maison</title>
-    <style>
-
-:root{
-  --bg:#0f172a;--panel:#111827;--panel2:#1f2937;--line:#334155;--text:#f8fafc;--muted:#cbd5e1;
-  --accent:#fbbf24;--green:#22c55e;--red:#ef4444;--blue:#38bdf8;--purple:#a78bfa;
-}
-*{box-sizing:border-box}
-body{margin:0;background:linear-gradient(180deg,#0f172a,#111827 40%,#0b1220);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh}
-button,input,select{font:inherit}
-button{cursor:pointer}
-.wrap{max-width:980px;margin:auto;padding:18px 16px 40px}
-.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px}
-.brand{font-size:28px;font-weight:900;letter-spacing:.4px}
-.sub{color:var(--muted);font-size:14px}
-.tabs{display:flex;gap:8px;flex-wrap:wrap}
-.tab{border:1px solid var(--line);background:#172033;color:white;border-radius:999px;padding:10px 14px;font-weight:800}
-.tab.active{background:var(--accent);color:#1f2937;border-color:var(--accent)}
-.card{background:rgba(17,24,39,.94);border:1px solid var(--line);border-radius:22px;padding:16px;margin:12px 0;box-shadow:0 10px 28px rgba(0,0,0,.18)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-.child-card{position:relative;overflow:hidden}
-.avatar{font-size:46px}
-.name{font-size:21px;font-weight:900}
-.points{font-size:18px;font-weight:900;color:var(--accent)}
-.pending{color:var(--blue);font-weight:800;font-size:14px}
-.progress{height:12px;background:#263244;border-radius:999px;overflow:hidden;margin:10px 0}
-.progress > div{height:100%;background:linear-gradient(90deg,#22c55e,#84cc16)}
-.bigbtn{width:100%;border:0;border-radius:16px;padding:14px;font-weight:900;margin-top:10px}
-.primary{background:var(--accent);color:#111827}
-.success{background:var(--green);color:#052e16}
-.danger{background:var(--red);color:#fff}
-.secondary{background:#263244;color:#fff;border:1px solid #3b4a61}
-.task{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:18px;background:#121a2a;margin:10px 0}
-.task .emoji{font-size:30px}
-.task .grow{flex:1}
-.task-title{font-weight:900;font-size:18px}
-.task-meta{font-size:13px;color:var(--muted);margin-top:3px}
-.status{display:inline-block;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:900}
-.status.todo{background:#273244;color:#e2e8f0}
-.status.pending{background:#0c4a6e;color:#bae6fd}
-.status.done{background:#14532d;color:#bbf7d0}
-.status.redo{background:#7f1d1d;color:#fecaca}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.actions button{border:0;border-radius:12px;padding:9px 11px;font-weight:900}
-.statline{display:flex;justify-content:space-between;gap:8px;align-items:center}
-h2,h3{margin:8px 0 12px}
-.reward{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:16px;margin:8px 0;background:#121a2a}
-.reward .emoji{font-size:30px}
-.reward .grow{flex:1}
-.small{font-size:12px;color:var(--muted)}
-.notice{border:1px dashed #475569;border-radius:16px;padding:12px;color:#cbd5e1;background:#0b1322}
-.parent-lock{display:flex;gap:8px}
-.parent-lock input{flex:1;border-radius:12px;border:1px solid var(--line);background:#0b1322;color:#fff;padding:12px}
-.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-.formgrid input,.formgrid select{width:100%;border:1px solid var(--line);background:#0b1322;color:white;border-radius:12px;padding:11px}
-hr{border:0;border-top:1px solid var(--line);margin:16px 0}
-.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#263244;color:#dbeafe;font-size:12px;font-weight:800}
-.footer{color:#94a3b8;text-align:center;margin-top:22px;font-size:12px}
-@media (max-width:600px){.brand{font-size:24px}.topbar{align-items:flex-start;flex-direction:column}.wrap{padding:14px 12px 30px}}
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>Mission Maison</title>
+<style>
+:root{--bg:#0f172a;--card:#111827;--line:#334155;--text:#f8fafc;--muted:#cbd5e1;--yellow:#fbbf24;--green:#22c55e;--red:#ef4444;--blue:#38bdf8}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(#0f172a,#0b1220);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+button,input,select{font:inherit}.wrap{max-width:980px;margin:auto;padding:16px 14px 40px}.top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.brand{font-size:27px;font-weight:950}.sub,.small{color:var(--muted);font-size:13px}.sync{font-size:12px;color:#bae6fd;margin-top:3px}
+.tabs{display:flex;gap:7px;flex-wrap:wrap}.tab{border:1px solid var(--line);background:#172033;color:white;border-radius:999px;padding:10px 13px;font-weight:900}.tab.on{background:var(--yellow);color:#111827}
+.card{background:rgba(17,24,39,.96);border:1px solid var(--line);border-radius:20px;padding:15px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.child{width:100%;text-align:left;color:white}.avatar{font-size:43px}.name{font-size:20px;font-weight:950}.pts{color:var(--yellow);font-weight:950}.wait{color:var(--blue);font-weight:800;font-size:13px}
+.progress{height:10px;background:#263244;border-radius:99px;overflow:hidden;margin:8px 0}.progress i{display:block;height:100%;background:#22c55e}
+.task,.reward{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);background:#121a2a;border-radius:16px;padding:12px;margin:9px 0}.emoji{font-size:29px}.grow{flex:1}.title{font-size:17px;font-weight:950}
+.status{display:inline-block;border-radius:99px;padding:5px 8px;font-size:11px;font-weight:900;margin-top:6px}.todo{background:#273244}.pending{background:#0c4a6e;color:#bae6fd}.done{background:#14532d;color:#bbf7d0}.redo{background:#7f1d1d;color:#fecaca}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}button{cursor:pointer}.btn{border:0;border-radius:12px;padding:9px 11px;font-weight:900}.big{width:100%;padding:13px;margin-top:9px}.primary{background:var(--yellow);color:#111827}.success{background:var(--green);color:#052e16}.danger{background:var(--red);color:white}.secondary{background:#263244;color:white;border:1px solid #475569}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}.form input,.form select,.cloud input{width:100%;background:#0b1322;color:white;border:1px solid var(--line);border-radius:11px;padding:10px}.cloud input{margin:5px 0}
+.notice{border:1px dashed #475569;background:#0b1322;border-radius:14px;padding:11px;color:#cbd5e1}.code{text-align:center;color:var(--yellow);font-size:30px;font-weight:950;letter-spacing:4px;padding:10px}.pill{background:#263244;border-radius:99px;padding:5px 8px;font-size:12px;font-weight:900}.stat{display:flex;justify-content:space-between;gap:8px;align-items:center}
+h2,h3{margin:5px 0 11px}.toast{position:fixed;left:50%;bottom:25px;transform:translateX(-50%);background:#020617;border:1px solid #475569;border-radius:13px;padding:11px 15px;font-weight:850;z-index:9999;max-width:90vw;text-align:center}.hidden{display:none}.footer{text-align:center;color:#94a3b8;font-size:11px;margin-top:20px}
+@media(max-width:600px){.brand{font-size:23px}.stat{align-items:flex-start}}
 </style>
 </head>
 <body>
-  <div id="app"></div>
-  <script>
-
-const STORAGE = "mission-maison-v1";
-const defaultData = {
-  parentPin:"1234",
-  activeChildId:"c1",
-  children:[
-    {id:"c1",name:"Dylan",avatar:"🦸",points:80},
-    {id:"c2",name:"Nolan",avatar:"🦖",points:45},
-    {id:"c3",name:"Enfant 3",avatar:"🦄",points:20},
-    {id:"c4",name:"Enfant 4",avatar:"🐼",points:10},
-    {id:"c5",name:"Enfant 5",avatar:"🐯",points:0},
-    {id:"c6",name:"Enfant 6",avatar:"🦊",points:0},
-  ],
-  tasks:[
-    {id:"t1",childId:"c1",title:"Ranger sa chambre",emoji:"🛏️",points:20,status:"todo"},
-    {id:"t2",childId:"c1",title:"Mettre la table",emoji:"🍽️",points:10,status:"todo"},
-    {id:"t3",childId:"c1",title:"Nourrir le chien",emoji:"🐶",points:10,status:"pending"},
-    {id:"t4",childId:"c2",title:"Ramasser les jouets",emoji:"🧸",points:15,status:"todo"},
-    {id:"t5",childId:"c2",title:"Mettre le linge sale au panier",emoji:"🧺",points:10,status:"done"},
-  ],
-  rewards:[
-    {id:"r1",title:"Choisir le film",emoji:"🎬",cost:80},
-    {id:"r2",title:"Dessert spécial",emoji:"🍦",cost:120},
-    {id:"r3",title:"30 min de jeu en plus",emoji:"🎮",cost:150},
-  ],
-  rewardRequests:[]
-};
-let data = load();
-let view = "kids";
-let parentUnlocked = false;
-
-function load(){
-  try{ return JSON.parse(localStorage.getItem(STORAGE)) || structuredClone(defaultData) }
-  catch(e){ return structuredClone(defaultData) }
-}
-function save(){ localStorage.setItem(STORAGE,JSON.stringify(data)); render(); }
-function esc(s){ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])) }
-function child(id){ return data.children.find(c=>c.id===id) }
-function tasksFor(id){ return data.tasks.filter(t=>t.childId===id) }
-function pendingPts(id){ return tasksFor(id).filter(t=>t.status==="pending").reduce((a,b)=>a+b.points,0) }
-function completedCount(id){ return tasksFor(id).filter(t=>t.status==="done"||t.status==="pending").length }
-function pct(id){ const ts=tasksFor(id); return ts.length?Math.round(completedCount(id)/ts.length*100):0 }
-
-function tabs(){
-  return `<div class="tabs">
-    <button class="tab ${view==="kids"?"active":""}" onclick="view='kids';render()">🎮 Enfants</button>
-    <button class="tab ${view==="parents"?"active":""}" onclick="view='parents';render()">🔒 Parents</button>
-  </div>`;
-}
-
-function kidsView(){
-  const c = child(data.activeChildId) || data.children[0];
-  return `
-  <div class="grid">
-    ${data.children.map(x=>`
-      <button class="card child-card" style="text-align:left;color:white" onclick="data.activeChildId='${x.id}';save()">
-        <div class="avatar">${x.avatar}</div>
-        <div class="name">${esc(x.name)}</div>
-        <div class="points">⭐ ${x.points} points</div>
-        <div class="pending">+ ${pendingPts(x.id)} en attente</div>
-        <div class="progress"><div style="width:${pct(x.id)}%"></div></div>
-        <div class="small">${completedCount(x.id)}/${tasksFor(x.id).length} missions faites aujourd'hui</div>
-      </button>`).join("")}
-  </div>
-
-  <div class="card">
-    <div class="statline"><h2>${c.avatar} Missions de ${esc(c.name)}</h2><span class="pill">⭐ ${c.points}</span></div>
-    <div class="notice">Tu peux faire toutes tes missions sans attendre un parent. Les points sont ajoutés seulement après confirmation. 👍</div>
-    ${tasksFor(c.id).map(taskCardKid).join("") || `<p class="sub">Aucune mission pour aujourd'hui.</p>`}
-  </div>
-
-  <div class="card">
-    <h2>🎁 Récompenses</h2>
-    ${data.rewards.map(r=>rewardCard(c,r)).join("")}
-  </div>`;
-}
-
-function taskCardKid(t){
-  const statusTxt = t.status==="todo"?"À faire":t.status==="pending"?"En attente d'un parent":t.status==="done"?"Confirmée ✅":"À refaire";
-  let btn = "";
-  if(t.status==="todo"||t.status==="redo") btn = `<button class="success" onclick="finishTask('${t.id}')">✅ J'ai terminé!</button>`;
-  return `<div class="task">
-    <div class="emoji">${t.emoji}</div>
-    <div class="grow">
-      <div class="task-title">${esc(t.title)}</div>
-      <div class="task-meta">⭐ ${t.points} points</div>
-      <div style="margin-top:7px"><span class="status ${t.status}">${statusTxt}</span></div>
-      <div class="actions">${btn}</div>
-    </div>
-  </div>`;
-}
-
-function finishTask(id){
-  const t=data.tasks.find(x=>x.id===id); if(!t)return;
-  t.status="pending"; save(); confettiMini();
-}
-function rewardCard(c,r){
-  const pendingReq = data.rewardRequests.find(q=>q.childId===c.id&&q.rewardId===r.id&&q.status==="pending");
-  return `<div class="reward">
-    <div class="emoji">${r.emoji}</div>
-    <div class="grow"><b>${esc(r.title)}</b><div class="small">Coûte ⭐ ${r.cost}</div></div>
-    ${pendingReq?`<span class="status pending">Demandée</span>`:
-      `<button class="secondary" onclick="requestReward('${c.id}','${r.id}')" ${c.points<r.cost?"disabled":""}>Je la veux</button>`}
-  </div>`;
-}
-function requestReward(childId,rewardId){
-  const c=child(childId), r=data.rewards.find(x=>x.id===rewardId); if(!c||!r||c.points<r.cost)return;
-  data.rewardRequests.push({id:"q"+Date.now(),childId,rewardId,status:"pending"}); save();
-}
-
-function parentView(){
-  if(!parentUnlocked){
-    return `<div class="card">
-      <h2>🔒 Mode Parents</h2>
-      <p class="sub">Entrez le NIP parent pour confirmer les tâches et les récompenses.</p>
-      <div class="parent-lock"><input id="pin" inputmode="numeric" placeholder="NIP parent"><button class="primary" onclick="unlock()">Déverrouiller</button></div>
-      <div class="small" style="margin-top:10px">NIP de démo : 1234 — vous pourrez le changer.</div>
-    </div>`;
-  }
-  const pendingTasks=data.tasks.filter(t=>t.status==="pending");
-  const pendingRewards=data.rewardRequests.filter(q=>q.status==="pending");
-  return `
-    <div class="card">
-      <div class="statline"><h2>⏳ À confirmer</h2><span class="pill">${pendingTasks.length} tâche(s)</span></div>
-      ${pendingTasks.map(parentPendingTask).join("") || `<p class="sub">Rien à confirmer pour l'instant 🎉</p>`}
-    </div>
-
-    <div class="card">
-      <h2>🎁 Récompenses demandées</h2>
-      ${pendingRewards.map(parentRewardReq).join("") || `<p class="sub">Aucune demande en attente.</p>`}
-    </div>
-
-    <div class="card">
-      <h2>➕ Ajouter une mission</h2>
-      <div class="formgrid">
-        <select id="newChild">${data.children.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>
-        <input id="newTitle" placeholder="Ex. Faire son lit">
-        <input id="newEmoji" placeholder="Emoji" value="🧹">
-        <input id="newPoints" type="number" min="0" value="10" placeholder="Points">
-      </div>
-      <button class="bigbtn primary" onclick="addTask()">Ajouter la mission</button>
-    </div>
-
-    <div class="card">
-      <h2>👧👦 Enfants</h2>
-      ${data.children.map(c=>`<div class="reward"><div class="emoji">${c.avatar}</div><div class="grow"><b>${esc(c.name)}</b><div class="small">⭐ ${c.points} points</div></div><button class="secondary" onclick="renameChild('${c.id}')">Modifier</button></div>`).join("")}
-    </div>
-
-    <div class="card">
-      <h2>⚙️ Réglages</h2>
-      <button class="secondary bigbtn" onclick="changePin()">Changer le NIP parent</button>
-      <button class="danger bigbtn" onclick="resetDemo()">Réinitialiser les données de démo</button>
-    </div>`;
-}
-
-function parentPendingTask(t){
-  const c=child(t.childId);
-  return `<div class="task">
-    <div class="emoji">${t.emoji}</div>
-    <div class="grow">
-      <div class="task-title">${esc(c?.name||"Enfant")} — ${esc(t.title)}</div>
-      <div class="task-meta">À confirmer • ⭐ ${t.points}</div>
-      <div class="actions">
-        <button class="success" onclick="approveTask('${t.id}')">✅ Confirmer</button>
-        <button class="danger" onclick="redoTask('${t.id}')">↩️ À refaire</button>
-      </div>
-    </div>
-  </div>`;
-}
-function approveTask(id){
-  const t=data.tasks.find(x=>x.id===id); if(!t||t.status!=="pending")return;
-  t.status="done"; const c=child(t.childId); if(c)c.points+=Number(t.points||0); save(); confettiMini();
-}
-function redoTask(id){ const t=data.tasks.find(x=>x.id===id); if(t){t.status="redo";save()} }
-
-function parentRewardReq(q){
-  const c=child(q.childId), r=data.rewards.find(x=>x.id===q.rewardId);
-  return `<div class="reward"><div class="emoji">${r?.emoji||"🎁"}</div><div class="grow"><b>${esc(c?.name||"Enfant")} veut : ${esc(r?.title||"Récompense")}</b><div class="small">Coût ⭐ ${r?.cost||0}</div></div>
-  <div class="actions"><button class="success" onclick="approveReward('${q.id}')">✅ Donner</button><button class="danger" onclick="denyReward('${q.id}')">❌ Refuser</button></div></div>`;
-}
-function approveReward(id){
-  const q=data.rewardRequests.find(x=>x.id===id); if(!q||q.status!=="pending")return;
-  const c=child(q.childId), r=data.rewards.find(x=>x.id===q.rewardId);
-  if(c&&r&&c.points>=r.cost){c.points-=r.cost;q.status="approved";save();confettiMini();}
-}
-function denyReward(id){const q=data.rewardRequests.find(x=>x.id===id);if(q){q.status="denied";save()}}
-
-function unlock(){
-  const v=document.getElementById("pin").value;
-  if(v===data.parentPin){parentUnlocked=true;render()} else alert("NIP incorrect");
-}
-function addTask(){
-  const childId=document.getElementById("newChild").value;
-  const title=document.getElementById("newTitle").value.trim();
-  const emoji=document.getElementById("newEmoji").value.trim()||"🧹";
-  const points=Number(document.getElementById("newPoints").value||0);
-  if(!title)return alert("Écris le nom de la mission.");
-  data.tasks.push({id:"t"+Date.now(),childId,title,emoji,points,status:"todo"}); save();
-}
-function renameChild(id){
-  const c=child(id); if(!c)return;
-  const n=prompt("Nom de l'enfant :",c.name); if(n===null)return;
-  const a=prompt("Avatar emoji :",c.avatar); if(a===null)return;
-  c.name=n.trim()||c.name; c.avatar=a.trim()||c.avatar; save();
-}
-function changePin(){
-  const p=prompt("Nouveau NIP parent (4 chiffres) :",data.parentPin);
-  if(p && /^\d{4}$/.test(p)){data.parentPin=p;save()} else if(p!==null) alert("Le NIP doit avoir 4 chiffres.");
-}
-function resetDemo(){
-  if(confirm("Remettre l'application comme au début?")){data=structuredClone(defaultData);parentUnlocked=false;save();}
-}
-function confettiMini(){
-  const b=document.body;
-  for(let i=0;i<22;i++){
-    const s=document.createElement("span");
-    s.textContent=["⭐","🎉","✨","🏆"][Math.floor(Math.random()*4)];
-    s.style.position="fixed";s.style.left=(10+Math.random()*80)+"vw";s.style.top="-30px";s.style.fontSize=(18+Math.random()*18)+"px";s.style.zIndex=9999;s.style.transition="transform 1.2s linear,opacity 1.2s";
-    b.appendChild(s); requestAnimationFrame(()=>{s.style.transform=`translateY(${60+Math.random()*80}vh) rotate(${Math.random()*540}deg)`;s.style.opacity="0"});
-    setTimeout(()=>s.remove(),1300);
-  }
-}
-function render(){
-  document.getElementById("app").innerHTML=`<div class="wrap">
-    <div class="topbar"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div></div>${tabs()}</div>
-    ${view==="kids"?kidsView():parentView()}
-    <div class="footer">Version prototype locale • prochaine étape : synchronisation familiale entre appareils</div>
-  </div>`;
-}
-render();
-
+<div id="app"></div><div id="toast" class="toast hidden"></div>
+<script>
+const STORE="missionMaisonV2",OLD="mission-maison-v1",PROF="missionMaisonCloudV1",ACTIVE="missionMaisonActive";
+const ALL=[0,1,2,3,4,5,6],WEEK=[1,2,3,4,5],WKND=[0,6],clone=o=>JSON.parse(JSON.stringify(o));
+const uid=p=>p+"_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,7);
+const now=()=>new Date().toISOString();
+const day=()=>{let d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`};
+const base={schemaVersion:2,settings:{app:"mission-maison"},parentPin:"1234",
+children:[{id:"c1",name:"Dylan",avatar:"🦸",points:0},{id:"c2",name:"Nolan",avatar:"🦖",points:0},{id:"c3",name:"Enfant 3",avatar:"🦄",points:0},{id:"c4",name:"Enfant 4",avatar:"🐼",points:0},{id:"c5",name:"Enfant 5",avatar:"🐯",points:0},{id:"c6",name:"Enfant 6",avatar:"🦊",points:0}],
+tasks:[{id:"t1",childId:"c1",title:"Ranger sa chambre",emoji:"🛏️",points:20,days:ALL},{id:"t2",childId:"c1",title:"Mettre la table",emoji:"🍽️",points:10,days:ALL},{id:"t3",childId:"c1",title:"Nourrir le chien",emoji:"🐶",points:10,days:ALL},{id:"t4",childId:"c2",title:"Ramasser les jouets",emoji:"🧸",points:15,days:ALL}],
+taskStates:{},rewards:[{id:"r1",title:"Choisir le film",emoji:"🎬",cost:80},{id:"r2",title:"Dessert spécial",emoji:"🍦",cost:120},{id:"r3",title:"30 min de jeu en plus",emoji:"🎮",cost:150}],rewardRequests:[],updatedAt:now()};
+function migrate(x){if(x?.schemaVersion===2)return x;let n=clone(base);if(x?.children)n.children=x.children.map(c=>({...c,points:0}));if(x?.tasks)n.tasks=x.tasks.map(t=>({id:t.id||uid("t"),childId:t.childId,title:t.title,emoji:t.emoji||"🧹",points:Number(t.points||0),days:[...ALL]}));if(x?.rewards)n.rewards=x.rewards;return n}
+function load(){try{let x=localStorage.getItem(STORE);if(x)return migrate(JSON.parse(x));x=localStorage.getItem(OLD);if(x)return migrate(JSON.parse(x))}catch{}return clone(base)}
+function loadProf(){try{return JSON.parse(localStorage.getItem(PROF))||{apiUrl:"",token:"",memberName:"",joinCode:"",cloudVersion:0}}catch{return{apiUrl:"",token:"",memberName:"",joinCode:"",cloudVersion:0}}}
+let data=load(),profile=loadProf(),view="kids",unlocked=false,active=localStorage.getItem(ACTIVE)||data.children[0].id,busy=false,dirty=false,timer=null;
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+function toast(s){let e=document.querySelector("#toast");e.textContent=s;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),2400)}
+function save(localOnly=false){data.updatedAt=now();localStorage.setItem(STORE,JSON.stringify(data));render();if(!localOnly&&profile.token){dirty=true;clearTimeout(timer);timer=setTimeout(pushCloud,400)}}
+function saveProf(){localStorage.setItem(PROF,JSON.stringify(profile))}
+function child(id){return data.children.find(x=>x.id===id)}
+function st(id,date=day()){return data.taskStates?.[date]?.[id]||"todo"}
+function setst(id,s,date=day()){data.taskStates[date]=data.taskStates[date]||{};data.taskStates[date][id]=s}
+function tasksFor(cid,date=day()){let wd=new Date(date+"T12:00:00").getDay();return data.tasks.filter(t=>t.childId===cid&&(t.days||ALL).includes(wd))}
+function pendingPts(cid){return tasksFor(cid).filter(t=>st(t.id)==="pending").reduce((a,t)=>a+Number(t.points||0),0)}
+function completed(cid){return tasksFor(cid).filter(t=>["pending","done"].includes(st(t.id))).length}
+function pct(cid){let t=tasksFor(cid);return t.length?Math.round(completed(cid)/t.length*100):0}
+function dlabel(d){d=d||ALL;if(d.length===7)return"Tous les jours";if(JSON.stringify(d)===JSON.stringify(WEEK))return"Lun–Ven";if(JSON.stringify(d)===JSON.stringify(WKND))return"Sam–Dim";return"Jours choisis"}
+function choose(id){active=id;localStorage.setItem(ACTIVE,id);render()}
+function tabs(){return `<div class="tabs"><button class="tab ${view==="kids"?"on":""}" onclick="view='kids';render()">🎮 Enfants</button><button class="tab ${view==="parents"?"on":""}" onclick="view='parents';render()">🔒 Parents</button><button class="tab ${view==="family"?"on":""}" onclick="view='family';render()">☁️ Famille</button></div>`}
+function kidTask(t){let s=st(t.id),txt=s==="todo"?"À faire":s==="pending"?"En attente du parent":s==="done"?"Confirmée ✅":"À refaire";return `<div class="task"><div class="emoji">${t.emoji}</div><div class="grow"><div class="title">${esc(t.title)}</div><div class="small">⭐ ${t.points} points</div><span class="status ${s}">${txt}</span>${["todo","redo"].includes(s)?`<div class="actions"><button class="btn success" onclick="finish('${t.id}')">✅ J'ai terminé!</button></div>`:""}</div></div>`}
+function rewardCard(c,r){let q=data.rewardRequests.find(x=>x.childId===c.id&&x.rewardId===r.id&&x.status==="pending");return `<div class="reward"><div class="emoji">${r.emoji}</div><div class="grow"><b>${esc(r.title)}</b><div class="small">⭐ ${r.cost}</div></div>${q?`<span class="status pending">Demandée</span>`:`<button class="btn secondary" onclick="askReward('${c.id}','${r.id}')" ${c.points<r.cost?"disabled":""}>Je la veux</button>`}</div>`}
+function kids(){let c=child(active)||data.children[0];return `<div class="grid">${data.children.map(x=>`<button class="card child" onclick="choose('${x.id}')"><div class="avatar">${x.avatar}</div><div class="name">${esc(x.name)}</div><div class="pts">⭐ ${x.points}</div><div class="wait">+ ${pendingPts(x.id)} en attente</div><div class="progress"><i style="width:${pct(x.id)}%"></i></div><div class="small">${completed(x.id)}/${tasksFor(x.id).length} missions aujourd'hui</div></button>`).join("")}</div><div class="card"><div class="stat"><h2>${c.avatar} ${esc(c.name)}</h2><span class="pill">⭐ ${c.points}</span></div><div class="notice">Tu peux continuer toutes tes missions sans attendre. Les points arrivent seulement après confirmation. 👍</div>${tasksFor(c.id).map(kidTask).join("")||`<p class="small">Aucune mission aujourd'hui 🎉</p>`}</div><div class="card"><h2>🎁 Récompenses</h2>${data.rewards.map(r=>rewardCard(c,r)).join("")}</div>`}
+function finish(id){if(["pending","done"].includes(st(id)))return;setst(id,"pending");save();confetti()}
+function askReward(cid,rid){let c=child(cid),r=data.rewards.find(x=>x.id===rid);if(!c||!r||c.points<r.cost)return;data.rewardRequests.push({id:uid("q"),childId:cid,rewardId:rid,status:"pending",createdAt:now()});save();toast("Demande envoyée 🎁")}
+function pendings(){let a=[];Object.entries(data.taskStates||{}).forEach(([date,o])=>Object.entries(o).forEach(([id,s])=>{let t=data.tasks.find(x=>x.id===id);if(s==="pending"&&t)a.push({date,t})}));return a.sort((a,b)=>b.date.localeCompare(a.date))}
+function parentPending(x){let c=child(x.t.childId);return `<div class="task"><div class="emoji">${x.t.emoji}</div><div class="grow"><div class="title">${esc(c?.name)} — ${esc(x.t.title)}</div><div class="small">${x.date===day()?"Aujourd'hui":x.date} · ⭐ ${x.t.points}</div><div class="actions"><button class="btn success" onclick="approve('${x.t.id}','${x.date}')">✅ Confirmer</button><button class="btn danger" onclick="redo('${x.t.id}','${x.date}')">↩️ À refaire</button></div></div></div>`}
+function rewardReq(q){let c=child(q.childId),r=data.rewards.find(x=>x.id===q.rewardId);return `<div class="reward"><div class="emoji">${r?.emoji||"🎁"}</div><div class="grow"><b>${esc(c?.name)} veut ${esc(r?.title||"Récompense")}</b><div class="small">⭐ ${r?.cost||0}</div></div><div class="actions"><button class="btn success" onclick="giveReward('${q.id}')">✅ Donner</button><button class="btn danger" onclick="denyReward('${q.id}')">❌</button></div></div>`}
+function parents(){if(!unlocked)return `<div class="card"><h2>🔒 Mode Parents</h2><div class="form"><input id="pin" inputmode="numeric" placeholder="NIP parent"><button class="btn primary" onclick="unlock()">Déverrouiller</button></div><p class="small">NIP de départ : 1234</p></div>`;let p=pendings(),rq=data.rewardRequests.filter(x=>x.status==="pending");return `<div class="card"><div class="stat"><h2>⏳ À confirmer</h2><span class="pill">${p.length}</span></div>${p.map(parentPending).join("")||`<p class="small">Rien à confirmer 🎉</p>`}</div><div class="card"><h2>🎁 Demandes</h2>${rq.map(rewardReq).join("")||`<p class="small">Aucune demande.</p>`}</div><div class="card"><h2>➕ Ajouter une mission</h2><div class="form"><select id="newChild">${data.children.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select><input id="newTitle" placeholder="Ex. Faire son lit"><input id="newEmoji" value="🧹"><input id="newPts" type="number" value="10"><select id="newDays"><option value="all">Tous les jours</option><option value="week">Lun–Ven</option><option value="wknd">Sam–Dim</option></select></div><button class="btn big primary" onclick="addTask()">Ajouter</button></div><div class="card"><h2>🧹 Gérer les missions</h2>${data.tasks.map(t=>`<div class="reward"><div class="emoji">${t.emoji}</div><div class="grow"><b>${esc(child(t.childId)?.name)} — ${esc(t.title)}</b><div class="small">⭐ ${t.points} · ${dlabel(t.days)}</div></div><div class="actions"><button class="btn secondary" onclick="editTask('${t.id}')">✏️</button><button class="btn danger" onclick="delTask('${t.id}')">🗑️</button></div></div>`).join("")}</div><div class="card"><h2>🎁 Gérer les récompenses</h2><div class="form"><input id="rTitle" placeholder="Ex. Choisir le film"><input id="rEmoji" value="🎁"><input id="rCost" type="number" value="50"></div><button class="btn big primary" onclick="addReward()">Ajouter</button>${data.rewards.map(r=>`<div class="reward"><div class="emoji">${r.emoji}</div><div class="grow"><b>${esc(r.title)}</b><div class="small">⭐ ${r.cost}</div></div><div class="actions"><button class="btn secondary" onclick="editReward('${r.id}')">✏️</button><button class="btn danger" onclick="delReward('${r.id}')">🗑️</button></div></div>`).join("")}</div><div class="card"><h2>👧👦 Enfants</h2>${data.children.map(c=>`<div class="reward"><div class="emoji">${c.avatar}</div><div class="grow"><b>${esc(c.name)}</b><div class="small">⭐ ${c.points}</div></div><button class="btn secondary" onclick="editChild('${c.id}')">Modifier</button></div>`).join("")}</div><div class="card"><h2>⚙️ Parents</h2><button class="btn big secondary" onclick="changePin()">Changer le NIP</button></div>`}
+function unlock(){if(document.querySelector("#pin").value===data.parentPin){unlocked=true;render()}else toast("NIP incorrect")}
+function approve(id,date){let t=data.tasks.find(x=>x.id===id);if(!t||st(id,date)!=="pending")return;let c=child(t.childId);c.points+=Number(t.points||0);setst(id,"done",date);save();confetti()}
+function redo(id,date){if(st(id,date)==="pending"){setst(id,"redo",date);save()}}
+function giveReward(id){let q=data.rewardRequests.find(x=>x.id===id),c=child(q?.childId),r=data.rewards.find(x=>x.id===q?.rewardId);if(c&&r&&c.points>=r.cost){c.points-=r.cost;q.status="approved";save();confetti()}else toast("Pas assez de points")}
+function denyReward(id){let q=data.rewardRequests.find(x=>x.id===id);if(q){q.status="denied";save()}}
+function addTask(){let title=document.querySelector("#newTitle").value.trim();if(!title)return toast("Écris la mission");let v=document.querySelector("#newDays").value,days=v==="week"?WEEK:v==="wknd"?WKND:ALL;data.tasks.push({id:uid("t"),childId:document.querySelector("#newChild").value,title,emoji:document.querySelector("#newEmoji").value||"🧹",points:Number(document.querySelector("#newPts").value||0),days:[...days]});save()}
+function editTask(id){let t=data.tasks.find(x=>x.id===id);if(!t)return;let n=prompt("Nom :",t.title);if(n===null)return;let p=prompt("Points :",t.points);if(p===null)return;let f=prompt("1=tous les jours, 2=lun-ven, 3=sam-dim","1");if(f===null)return;t.title=n||t.title;t.points=Math.max(0,Number(p)||0);t.days=f==="2"?[...WEEK]:f==="3"?[...WKND]:[...ALL];save()}
+function delTask(id){if(confirm("Supprimer cette mission?")){data.tasks=data.tasks.filter(x=>x.id!==id);save()}}
+function addReward(){let title=document.querySelector("#rTitle").value.trim();if(!title)return toast("Écris la récompense");data.rewards.push({id:uid("r"),title,emoji:document.querySelector("#rEmoji").value||"🎁",cost:Math.max(0,Number(document.querySelector("#rCost").value||0))});save()}
+function editReward(id){let r=data.rewards.find(x=>x.id===id);if(!r)return;let n=prompt("Récompense :",r.title);if(n===null)return;let c=prompt("Coût en points :",r.cost);if(c===null)return;r.title=n||r.title;r.cost=Math.max(0,Number(c)||0);save()}
+function delReward(id){if(confirm("Supprimer cette récompense?")){data.rewards=data.rewards.filter(x=>x.id!==id);save()}}
+function editChild(id){let c=child(id),n=prompt("Nom :",c.name);if(n===null)return;let a=prompt("Avatar emoji :",c.avatar);if(a===null)return;let p=prompt("Points actuels :",c.points);if(p===null)return;c.name=n||c.name;c.avatar=a||c.avatar;c.points=Math.max(0,Number(p)||0);save()}
+function changePin(){let p=prompt("Nouveau NIP 4 chiffres :",data.parentPin);if(p===null)return;if(/^\d{4}$/.test(p)){data.parentPin=p;save()}else toast("4 chiffres requis")}
+function apiBase(){return(profile.apiUrl||"").replace(/\/+$/,"")}
+async function api(path,opt={}){let h={...(opt.headers||{})};if(opt.body)h["Content-Type"]=profile.token?"application/json":"text/plain;charset=UTF-8";if(profile.token)h.Authorization="Bearer "+profile.token;let r=await fetch(apiBase()+path,{...opt,headers:h}),j=await r.json().catch(()=>({}));if(!r.ok){let e=new Error(j.error||"Erreur "+r.status);e.status=r.status;e.data=j;throw e}return j}
+async function createFamily(){profile.apiUrl=document.querySelector("#apiUrl").value.trim();profile.memberName=document.querySelector("#memberName").value.trim()||"Parent";if(!profile.apiUrl)return toast("Colle l'adresse du serveur");try{let j=await api("/api/family/create",{method:"POST",body:JSON.stringify({familyName:"Mission Maison",memberName:profile.memberName,timezone:"America/Toronto"})});Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:j.version||0});saveProf();dirty=true;await pushCloud();render();toast("Famille créée ✅")}catch(e){toast("Impossible : "+e.message)}}
+async function joinFamily(){profile.apiUrl=document.querySelector("#joinApi").value.trim();profile.memberName=document.querySelector("#joinName").value.trim()||"Appareil";let code=document.querySelector("#joinCode").value.trim().toUpperCase();if(!profile.apiUrl||!code)return toast("Adresse + code requis");try{let j=await api("/api/family/join",{method:"POST",body:JSON.stringify({joinCode:code,memberName:profile.memberName})});Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:0});saveProf();dirty=false;await pullCloud(true);view="kids";render();toast("Famille rejointe ✅")}catch(e){toast("Impossible : "+e.message)}}
+async function pushCloud(){if(!profile.token||busy)return;busy=true;try{let j=await api("/api/state",{method:"PUT",body:JSON.stringify({version:Number(profile.cloudVersion||0),data})});profile.cloudVersion=Number(j.version||0);saveProf();dirty=false;render()}catch(e){if(e.status===409&&e.data?.data){data=e.data.data;profile.cloudVersion=Number(e.data.version||0);saveProf();dirty=false;localStorage.setItem(STORE,JSON.stringify(data));render();toast("Une autre modification est arrivée — réessaie")}else toast("Sync à vérifier")}finally{busy=false}}
+async function pullCloud(force=false){if(!profile.token||busy||(dirty&&!force))return;busy=true;try{let j=await api("/api/state");if(j.data?.schemaVersion===2){data=j.data;profile.cloudVersion=Number(j.version||0);saveProf();localStorage.setItem(STORE,JSON.stringify(data));render()}}catch(e){if(force)toast("Sync impossible")}finally{busy=false}}
+function leave(){if(confirm("Déconnecter cet appareil?")){profile={apiUrl:profile.apiUrl||"",token:"",memberName:"",joinCode:"",cloudVersion:0};saveProf();render()}}
+function family(){if(profile.token)return `<div class="card"><h2>☁️ Famille synchronisée</h2><div class="notice">Même tâches, points et confirmations sur tous les appareils.</div><div class="code">${esc(profile.joinCode)}</div><div class="small" style="text-align:center">Code à mettre sur les autres appareils</div><p><b>Appareil :</b> ${esc(profile.memberName)}</p><p class="small"><b>Serveur :</b> ${esc(profile.apiUrl)}</p><button class="btn big secondary" onclick="pullCloud(true)">🔄 Synchroniser</button><button class="btn big danger" onclick="leave()">Déconnecter cet appareil</button></div><div class="card"><h3>Sur le cell de ta blonde et la tablette</h3><div class="notice">Ouvre Mission Maison → ☁️ Famille → colle la même adresse du serveur → entre le code <b>${esc(profile.joinCode)}</b> → Rejoindre.</div></div>`;return `<div class="card cloud"><h2>☁️ Créer le partage</h2><div class="notice">Dans <b>Budget Pack → Réglages → Partage familial</b>, copie l'<b>Adresse du serveur</b>. Colle-la ici. On réutilise le serveur déjà en marche.</div><input id="apiUrl" placeholder="https://...workers.dev" value="${esc(profile.apiUrl||"")}"><input id="memberName" placeholder="Ton nom, ex. Francis"><button class="btn big primary" onclick="createFamily()">🏠 Créer ma famille Mission Maison</button></div><div class="card cloud"><h2>🔗 Rejoindre une famille</h2><input id="joinApi" placeholder="Même adresse du serveur" value="${esc(profile.apiUrl||"")}"><input id="joinName" placeholder="Ex. Maman ou Tablette enfants"><input id="joinCode" placeholder="CODE FAMILLE"><button class="btn big success" onclick="joinFamily()">Rejoindre</button></div>`}
+function confetti(){for(let i=0;i<16;i++){let s=document.createElement("span");s.textContent=["⭐","🎉","✨","🏆"][Math.floor(Math.random()*4)];s.style.cssText=`position:fixed;left:${10+Math.random()*80}vw;top:-30px;font-size:${18+Math.random()*17}px;z-index:99999;transition:transform 1.1s linear,opacity 1.1s`;document.body.appendChild(s);requestAnimationFrame(()=>{s.style.transform=`translateY(${55+Math.random()*80}vh) rotate(${Math.random()*500}deg)`;s.style.opacity="0"});setTimeout(()=>s.remove(),1200)}}
+function render(){if(!child(active))active=data.children[0]?.id;document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>${view==="kids"?kids():view==="parents"?parents():family()}<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"}</div></div>`}
+localStorage.setItem(STORE,JSON.stringify(data));render();if(profile.token)pullCloud(true);setInterval(()=>{if(profile.token&&document.visibilityState==="visible")pullCloud()},5000);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&profile.token)pullCloud(true)});
 </script>
 </body>
 </html>
