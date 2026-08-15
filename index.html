@@ -71,6 +71,11 @@ function askReward(cid,rid){let c=child(cid),r=data.rewards.find(x=>x.id===rid);
 function pendings(){let a=[];Object.entries(data.taskStates||{}).forEach(([date,o])=>Object.entries(o).forEach(([id,s])=>{let t=data.tasks.find(x=>x.id===id);if(s==="pending"&&t)a.push({date,t})}));return a.sort((a,b)=>b.date.localeCompare(a.date))}
 function parentPending(x){let c=child(x.t.childId);return `<div class="task"><div class="emoji">${x.t.emoji}</div><div class="grow"><div class="title">${esc(c?.name)} — ${esc(x.t.title)}</div><div class="small">${x.date===day()?"Aujourd'hui":x.date} · ⭐ ${x.t.points}</div><div class="actions"><button class="btn success" onclick="approve('${x.t.id}','${x.date}')">✅ Confirmer</button><button class="btn danger" onclick="redo('${x.t.id}','${x.date}')">↩️ À refaire</button></div></div></div>`}
 function rewardReq(q){let c=child(q.childId),r=data.rewards.find(x=>x.id===q.rewardId);return `<div class="reward"><div class="emoji">${r?.emoji||"🎁"}</div><div class="grow"><b>${esc(c?.name)} veut ${esc(r?.title||"Récompense")}</b><div class="small">⭐ ${r?.cost||0}</div></div><div class="actions"><button class="btn success" onclick="giveReward('${q.id}')">✅ Donner</button><button class="btn danger" onclick="denyReward('${q.id}')">❌</button></div></div>`}
+function parentManageTask(t){
+  const s=st(t.id), label=s==="todo"?"À faire":s==="pending"?"En attente":s==="done"?"Confirmée ✅":"À refaire";
+  const undo=s!=="todo"?`<button class="btn secondary" onclick="undoToday('${t.id}')">↩️ Annuler aujourd'hui</button>`:"";
+  return `<div class="reward"><div class="emoji">${t.emoji}</div><div class="grow"><b>${esc(child(t.childId)?.name)} — ${esc(t.title)}</b><div class="small">⭐ ${t.points} · ${dlabel(t.days)} · Aujourd'hui : ${label}</div></div><div class="actions">${undo}<button class="btn secondary" onclick="editTask('${t.id}')">✏️</button><button class="btn danger" onclick="delTask('${t.id}')">🗑️</button></div></div>`;
+}
 
 function parents(){
 if(!unlocked)return `<div class="card"><h2>🔒 Mode Parents</h2><div class="form"><input id="pin" inputmode="numeric" placeholder="NIP parent"><button class="btn primary" onclick="unlock()">Déverrouiller</button></div><p class="small">NIP de départ : 1234</p></div>`;
@@ -78,7 +83,7 @@ let p=pendings(),rq=data.rewardRequests.filter(x=>x.status==="pending");
 return `<div class="card"><div class="stat"><h2>⏳ À confirmer</h2><span class="pill">${p.length}</span></div>${p.map(parentPending).join("")||`<p class="small">Rien à confirmer 🎉</p>`}</div>
 <div class="card"><h2>🎁 Demandes</h2>${rq.map(rewardReq).join("")||`<p class="small">Aucune demande.</p>`}</div>
 <div class="card"><h2>➕ Ajouter une mission</h2><div class="form"><select id="newChild">${data.children.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select><input id="newTitle" placeholder="Ex. Faire son lit"><input id="newEmoji" value="🧹"><input id="newPts" type="number" value="10"><select id="newDays"><option value="all">Tous les jours</option><option value="week">Lun–Ven</option><option value="wknd">Sam–Dim</option></select></div><button class="btn big primary" onclick="addTask()">Ajouter</button></div>
-<div class="card"><h2>🧹 Gérer les missions</h2>${data.tasks.map(t=>`<div class="reward"><div class="emoji">${t.emoji}</div><div class="grow"><b>${esc(child(t.childId)?.name)} — ${esc(t.title)}</b><div class="small">⭐ ${t.points} · ${dlabel(t.days)}</div></div><div class="actions"><button class="btn secondary" onclick="editTask('${t.id}')">✏️</button><button class="btn danger" onclick="delTask('${t.id}')">🗑️</button></div></div>`).join("")}</div>
+<div class="card"><h2>🧹 Gérer les missions</h2>${data.tasks.map(parentManageTask).join("")}</div>
 <div class="card"><h2>🎁 Gérer les récompenses</h2><div class="form"><input id="rTitle" placeholder="Ex. Choisir le film"><input id="rEmoji" value="🎁"><input id="rCost" type="number" value="50"></div><button class="btn big primary" onclick="addReward()">Ajouter</button>${data.rewards.map(r=>`<div class="reward"><div class="emoji">${r.emoji}</div><div class="grow"><b>${esc(r.title)}</b><div class="small">⭐ ${r.cost}</div></div><div class="actions"><button class="btn secondary" onclick="editReward('${r.id}')">✏️</button><button class="btn danger" onclick="delReward('${r.id}')">🗑️</button></div></div>`).join("")}</div>
 <div class="card"><h2>👧👦 Enfants</h2>${data.children.map(c=>`<div class="reward"><div class="emoji">${c.avatar}</div><div class="grow"><b>${esc(c.name)}</b><div class="small">⭐ ${c.points}</div></div><button class="btn secondary" onclick="editChild('${c.id}')">Modifier</button></div>`).join("")}</div>
 <div class="card"><h2>⚙️ Parents</h2><button class="btn big secondary" onclick="changePin()">Changer le NIP</button></div>`}
@@ -86,6 +91,18 @@ return `<div class="card"><div class="stat"><h2>⏳ À confirmer</h2><span class
 function unlock(){if(document.querySelector("#pin").value===data.parentPin){unlocked=true;render()}else toast("NIP incorrect")}
 function approve(id,date){let t=data.tasks.find(x=>x.id===id);if(!t||st(id,date)!=="pending")return;let c=child(t.childId);c.points+=Number(t.points||0);setst(id,"done",date);save();confetti()}
 function redo(id,date){if(st(id,date)==="pending"){setst(id,"redo",date);save()}}
+function undoToday(id){
+  const t=data.tasks.find(x=>x.id===id);if(!t)return;
+  const s=st(id,day());if(s==="todo")return toast("Cette mission est déjà à faire");
+  const c=child(t.childId);
+  const msg=s==="done"
+    ?`Annuler la mission "${t.title}" aujourd'hui et retirer ${t.points} point(s)?`
+    :`Remettre la mission "${t.title}" à faire aujourd'hui?`;
+  if(!confirm(msg))return;
+  if(s==="done"&&c)c.points=Math.max(0,Number(c.points||0)-Number(t.points||0));
+  setst(id,"todo",day());save();
+  toast(s==="done"?`Mission annulée · ${t.points} point(s) retiré(s)`:"Mission remise à faire ✅");
+}
 function giveReward(id){let q=data.rewardRequests.find(x=>x.id===id),c=child(q?.childId),r=data.rewards.find(x=>x.id===q?.rewardId);if(c&&r&&c.points>=r.cost){c.points-=r.cost;q.status="approved";save();confetti()}else toast("Pas assez de points")}
 function denyReward(id){let q=data.rewardRequests.find(x=>x.id===id);if(q){q.status="denied";save()}}
 function addTask(){let title=document.querySelector("#newTitle").value.trim();if(!title)return toast("Écris la mission");let v=document.querySelector("#newDays").value,days=v==="week"?WEEK:v==="wknd"?WKND:ALL;data.tasks.push({id:uid("t"),childId:document.querySelector("#newChild").value,title,emoji:document.querySelector("#newEmoji").value||"🧹",points:Number(document.querySelector("#newPts").value||0),days:[...days]});save()}
@@ -167,7 +184,7 @@ if(!child(active))active=data.children[0]?.id;
 document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>
 ${!isStandalone()?`<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>`:""}
 ${view==="kids"?kids():view==="parents"?parents():family()}
-<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.1</div></div>`}
+<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.2</div></div>`}
 
 localStorage.setItem(STORE,JSON.stringify(data));saveProf();render();
 if(profile.token)pullCloud(true);
