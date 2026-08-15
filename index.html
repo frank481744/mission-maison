@@ -5,13 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <title>Mission Maison</title>
-
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mission Maison">
-
 <style>
 :root{--bg:#0f172a;--card:#111827;--line:#334155;--text:#f8fafc;--muted:#cbd5e1;--yellow:#fbbf24;--green:#22c55e;--red:#ef4444;--blue:#38bdf8}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(#0f172a,#0b1220);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
@@ -33,6 +31,7 @@ h2,h3{margin:5px 0 11px}.toast{position:fixed;left:50%;bottom:25px;transform:tra
 <div id="app"></div><div id="toast" class="toast hidden"></div>
 <script>
 const STORE="missionMaisonV2",OLD="mission-maison-v1",PROF="missionMaisonCloudV1",ACTIVE="missionMaisonActive";
+const API_DEFAULT="https://budget-pack-api.2ywtpfbvpb.workers.dev";
 const ALL=[0,1,2,3,4,5,6],WEEK=[1,2,3,4,5],WKND=[0,6],clone=o=>JSON.parse(JSON.stringify(o));
 const uid=p=>p+"_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,7);
 const now=()=>new Date().toISOString();
@@ -41,39 +40,16 @@ const base={schemaVersion:2,settings:{app:"mission-maison"},parentPin:"1234",
 children:[{id:"c1",name:"Dylan",avatar:"🦸",points:0},{id:"c2",name:"Nolan",avatar:"🦖",points:0},{id:"c3",name:"Enfant 3",avatar:"🦄",points:0},{id:"c4",name:"Enfant 4",avatar:"🐼",points:0},{id:"c5",name:"Enfant 5",avatar:"🐯",points:0},{id:"c6",name:"Enfant 6",avatar:"🦊",points:0}],
 tasks:[{id:"t1",childId:"c1",title:"Ranger sa chambre",emoji:"🛏️",points:20,days:ALL},{id:"t2",childId:"c1",title:"Mettre la table",emoji:"🍽️",points:10,days:ALL},{id:"t3",childId:"c1",title:"Nourrir le chien",emoji:"🐶",points:10,days:ALL},{id:"t4",childId:"c2",title:"Ramasser les jouets",emoji:"🧸",points:15,days:ALL}],
 taskStates:{},rewards:[{id:"r1",title:"Choisir le film",emoji:"🎬",cost:80},{id:"r2",title:"Dessert spécial",emoji:"🍦",cost:120},{id:"r3",title:"30 min de jeu en plus",emoji:"🎮",cost:150}],rewardRequests:[],updatedAt:now()};
+
 function migrate(x){if(x?.schemaVersion===2)return x;let n=clone(base);if(x?.children)n.children=x.children.map(c=>({...c,points:0}));if(x?.tasks)n.tasks=x.tasks.map(t=>({id:t.id||uid("t"),childId:t.childId,title:t.title,emoji:t.emoji||"🧹",points:Number(t.points||0),days:[...ALL]}));if(x?.rewards)n.rewards=x.rewards;return n}
 function load(){try{let x=localStorage.getItem(STORE);if(x)return migrate(JSON.parse(x));x=localStorage.getItem(OLD);if(x)return migrate(JSON.parse(x))}catch{}return clone(base)}
-function loadProf(){try{return JSON.parse(localStorage.getItem(PROF))||{apiUrl:"",token:"",memberName:"",joinCode:"",cloudVersion:0}}catch{return{apiUrl:"",token:"",memberName:"",joinCode:"",cloudVersion:0}}}
-let data=load(),profile=loadProf(),view="kids",unlocked=false,active=localStorage.getItem(ACTIVE)||data.children[0].id,busy=false,dirty=false,timer=null;
-const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-function toast(s){let e=document.querySelector("#toast");e.textContent=s;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),2400)}
-function save(localOnly=false){data.updatedAt=now();
-let installPrompt=null;
-window.addEventListener("beforeinstallprompt",e=>{
-  e.preventDefault();
-  installPrompt=e;
-  render();
-});
-window.addEventListener("appinstalled",()=>{
-  installPrompt=null;
-  toast("Mission Maison installée ✅");
-  render();
-});
-async function installApp(){
-  if(!installPrompt){
-    toast("Ouvre le menu du navigateur puis choisis Installer l’application / Ajouter à l’écran d’accueil.");
-    return;
-  }
-  installPrompt.prompt();
-  try{await installPrompt.userChoice}catch(e){}
-  installPrompt=null;
-  render();
-}
-function isStandalone(){
-  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true;
-}
+function loadProf(){try{return JSON.parse(localStorage.getItem(PROF))||{apiUrl:API_DEFAULT,token:"",memberName:"",joinCode:"",cloudVersion:0}}catch{return{apiUrl:API_DEFAULT,token:"",memberName:"",joinCode:"",cloudVersion:0}}}
+let data=load(),profile=loadProf(),view="kids",unlocked=false,active=localStorage.getItem(ACTIVE)||data.children[0].id,busy=false,dirty=false,timer=null,installPrompt=null;
+if(!profile.apiUrl)profile.apiUrl=API_DEFAULT;
 
-localStorage.setItem(STORE,JSON.stringify(data));render();if(!localOnly&&profile.token){dirty=true;clearTimeout(timer);timer=setTimeout(pushCloud,400)}}
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+function toast(s){let e=document.querySelector("#toast");e.textContent=s;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),2600)}
+function save(localOnly=false){data.updatedAt=now();localStorage.setItem(STORE,JSON.stringify(data));render();if(!localOnly&&profile.token){dirty=true;clearTimeout(timer);timer=setTimeout(pushCloud,400)}}
 function saveProf(){localStorage.setItem(PROF,JSON.stringify(profile))}
 function child(id){return data.children.find(x=>x.id===id)}
 function st(id,date=day()){return data.taskStates?.[date]?.[id]||"todo"}
@@ -85,15 +61,28 @@ function pct(cid){let t=tasksFor(cid);return t.length?Math.round(completed(cid)/
 function dlabel(d){d=d||ALL;if(d.length===7)return"Tous les jours";if(JSON.stringify(d)===JSON.stringify(WEEK))return"Lun–Ven";if(JSON.stringify(d)===JSON.stringify(WKND))return"Sam–Dim";return"Jours choisis"}
 function choose(id){active=id;localStorage.setItem(ACTIVE,id);render()}
 function tabs(){return `<div class="tabs"><button class="tab ${view==="kids"?"on":""}" onclick="view='kids';render()">🎮 Enfants</button><button class="tab ${view==="parents"?"on":""}" onclick="view='parents';render()">🔒 Parents</button><button class="tab ${view==="family"?"on":""}" onclick="view='family';render()">☁️ Famille</button></div>`}
+
 function kidTask(t){let s=st(t.id),txt=s==="todo"?"À faire":s==="pending"?"En attente du parent":s==="done"?"Confirmée ✅":"À refaire";return `<div class="task"><div class="emoji">${t.emoji}</div><div class="grow"><div class="title">${esc(t.title)}</div><div class="small">⭐ ${t.points} points</div><span class="status ${s}">${txt}</span>${["todo","redo"].includes(s)?`<div class="actions"><button class="btn success" onclick="finish('${t.id}')">✅ J'ai terminé!</button></div>`:""}</div></div>`}
 function rewardCard(c,r){let q=data.rewardRequests.find(x=>x.childId===c.id&&x.rewardId===r.id&&x.status==="pending");return `<div class="reward"><div class="emoji">${r.emoji}</div><div class="grow"><b>${esc(r.title)}</b><div class="small">⭐ ${r.cost}</div></div>${q?`<span class="status pending">Demandée</span>`:`<button class="btn secondary" onclick="askReward('${c.id}','${r.id}')" ${c.points<r.cost?"disabled":""}>Je la veux</button>`}</div>`}
 function kids(){let c=child(active)||data.children[0];return `<div class="grid">${data.children.map(x=>`<button class="card child" onclick="choose('${x.id}')"><div class="avatar">${x.avatar}</div><div class="name">${esc(x.name)}</div><div class="pts">⭐ ${x.points}</div><div class="wait">+ ${pendingPts(x.id)} en attente</div><div class="progress"><i style="width:${pct(x.id)}%"></i></div><div class="small">${completed(x.id)}/${tasksFor(x.id).length} missions aujourd'hui</div></button>`).join("")}</div><div class="card"><div class="stat"><h2>${c.avatar} ${esc(c.name)}</h2><span class="pill">⭐ ${c.points}</span></div><div class="notice">Tu peux continuer toutes tes missions sans attendre. Les points arrivent seulement après confirmation. 👍</div>${tasksFor(c.id).map(kidTask).join("")||`<p class="small">Aucune mission aujourd'hui 🎉</p>`}</div><div class="card"><h2>🎁 Récompenses</h2>${data.rewards.map(r=>rewardCard(c,r)).join("")}</div>`}
 function finish(id){if(["pending","done"].includes(st(id)))return;setst(id,"pending");save();confetti()}
 function askReward(cid,rid){let c=child(cid),r=data.rewards.find(x=>x.id===rid);if(!c||!r||c.points<r.cost)return;data.rewardRequests.push({id:uid("q"),childId:cid,rewardId:rid,status:"pending",createdAt:now()});save();toast("Demande envoyée 🎁")}
+
 function pendings(){let a=[];Object.entries(data.taskStates||{}).forEach(([date,o])=>Object.entries(o).forEach(([id,s])=>{let t=data.tasks.find(x=>x.id===id);if(s==="pending"&&t)a.push({date,t})}));return a.sort((a,b)=>b.date.localeCompare(a.date))}
 function parentPending(x){let c=child(x.t.childId);return `<div class="task"><div class="emoji">${x.t.emoji}</div><div class="grow"><div class="title">${esc(c?.name)} — ${esc(x.t.title)}</div><div class="small">${x.date===day()?"Aujourd'hui":x.date} · ⭐ ${x.t.points}</div><div class="actions"><button class="btn success" onclick="approve('${x.t.id}','${x.date}')">✅ Confirmer</button><button class="btn danger" onclick="redo('${x.t.id}','${x.date}')">↩️ À refaire</button></div></div></div>`}
 function rewardReq(q){let c=child(q.childId),r=data.rewards.find(x=>x.id===q.rewardId);return `<div class="reward"><div class="emoji">${r?.emoji||"🎁"}</div><div class="grow"><b>${esc(c?.name)} veut ${esc(r?.title||"Récompense")}</b><div class="small">⭐ ${r?.cost||0}</div></div><div class="actions"><button class="btn success" onclick="giveReward('${q.id}')">✅ Donner</button><button class="btn danger" onclick="denyReward('${q.id}')">❌</button></div></div>`}
-function parents(){if(!unlocked)return `<div class="card"><h2>🔒 Mode Parents</h2><div class="form"><input id="pin" inputmode="numeric" placeholder="NIP parent"><button class="btn primary" onclick="unlock()">Déverrouiller</button></div><p class="small">NIP de départ : 1234</p></div>`;let p=pendings(),rq=data.rewardRequests.filter(x=>x.status==="pending");return `<div class="card"><div class="stat"><h2>⏳ À confirmer</h2><span class="pill">${p.length}</span></div>${p.map(parentPending).join("")||`<p class="small">Rien à confirmer 🎉</p>`}</div><div class="card"><h2>🎁 Demandes</h2>${rq.map(rewardReq).join("")||`<p class="small">Aucune demande.</p>`}</div><div class="card"><h2>➕ Ajouter une mission</h2><div class="form"><select id="newChild">${data.children.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select><input id="newTitle" placeholder="Ex. Faire son lit"><input id="newEmoji" value="🧹"><input id="newPts" type="number" value="10"><select id="newDays"><option value="all">Tous les jours</option><option value="week">Lun–Ven</option><option value="wknd">Sam–Dim</option></select></div><button class="btn big primary" onclick="addTask()">Ajouter</button></div><div class="card"><h2>🧹 Gérer les missions</h2>${data.tasks.map(t=>`<div class="reward"><div class="emoji">${t.emoji}</div><div class="grow"><b>${esc(child(t.childId)?.name)} — ${esc(t.title)}</b><div class="small">⭐ ${t.points} · ${dlabel(t.days)}</div></div><div class="actions"><button class="btn secondary" onclick="editTask('${t.id}')">✏️</button><button class="btn danger" onclick="delTask('${t.id}')">🗑️</button></div></div>`).join("")}</div><div class="card"><h2>🎁 Gérer les récompenses</h2><div class="form"><input id="rTitle" placeholder="Ex. Choisir le film"><input id="rEmoji" value="🎁"><input id="rCost" type="number" value="50"></div><button class="btn big primary" onclick="addReward()">Ajouter</button>${data.rewards.map(r=>`<div class="reward"><div class="emoji">${r.emoji}</div><div class="grow"><b>${esc(r.title)}</b><div class="small">⭐ ${r.cost}</div></div><div class="actions"><button class="btn secondary" onclick="editReward('${r.id}')">✏️</button><button class="btn danger" onclick="delReward('${r.id}')">🗑️</button></div></div>`).join("")}</div><div class="card"><h2>👧👦 Enfants</h2>${data.children.map(c=>`<div class="reward"><div class="emoji">${c.avatar}</div><div class="grow"><b>${esc(c.name)}</b><div class="small">⭐ ${c.points}</div></div><button class="btn secondary" onclick="editChild('${c.id}')">Modifier</button></div>`).join("")}</div><div class="card"><h2>⚙️ Parents</h2><button class="btn big secondary" onclick="changePin()">Changer le NIP</button></div>`}
+
+function parents(){
+if(!unlocked)return `<div class="card"><h2>🔒 Mode Parents</h2><div class="form"><input id="pin" inputmode="numeric" placeholder="NIP parent"><button class="btn primary" onclick="unlock()">Déverrouiller</button></div><p class="small">NIP de départ : 1234</p></div>`;
+let p=pendings(),rq=data.rewardRequests.filter(x=>x.status==="pending");
+return `<div class="card"><div class="stat"><h2>⏳ À confirmer</h2><span class="pill">${p.length}</span></div>${p.map(parentPending).join("")||`<p class="small">Rien à confirmer 🎉</p>`}</div>
+<div class="card"><h2>🎁 Demandes</h2>${rq.map(rewardReq).join("")||`<p class="small">Aucune demande.</p>`}</div>
+<div class="card"><h2>➕ Ajouter une mission</h2><div class="form"><select id="newChild">${data.children.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select><input id="newTitle" placeholder="Ex. Faire son lit"><input id="newEmoji" value="🧹"><input id="newPts" type="number" value="10"><select id="newDays"><option value="all">Tous les jours</option><option value="week">Lun–Ven</option><option value="wknd">Sam–Dim</option></select></div><button class="btn big primary" onclick="addTask()">Ajouter</button></div>
+<div class="card"><h2>🧹 Gérer les missions</h2>${data.tasks.map(t=>`<div class="reward"><div class="emoji">${t.emoji}</div><div class="grow"><b>${esc(child(t.childId)?.name)} — ${esc(t.title)}</b><div class="small">⭐ ${t.points} · ${dlabel(t.days)}</div></div><div class="actions"><button class="btn secondary" onclick="editTask('${t.id}')">✏️</button><button class="btn danger" onclick="delTask('${t.id}')">🗑️</button></div></div>`).join("")}</div>
+<div class="card"><h2>🎁 Gérer les récompenses</h2><div class="form"><input id="rTitle" placeholder="Ex. Choisir le film"><input id="rEmoji" value="🎁"><input id="rCost" type="number" value="50"></div><button class="btn big primary" onclick="addReward()">Ajouter</button>${data.rewards.map(r=>`<div class="reward"><div class="emoji">${r.emoji}</div><div class="grow"><b>${esc(r.title)}</b><div class="small">⭐ ${r.cost}</div></div><div class="actions"><button class="btn secondary" onclick="editReward('${r.id}')">✏️</button><button class="btn danger" onclick="delReward('${r.id}')">🗑️</button></div></div>`).join("")}</div>
+<div class="card"><h2>👧👦 Enfants</h2>${data.children.map(c=>`<div class="reward"><div class="emoji">${c.avatar}</div><div class="grow"><b>${esc(c.name)}</b><div class="small">⭐ ${c.points}</div></div><button class="btn secondary" onclick="editChild('${c.id}')">Modifier</button></div>`).join("")}</div>
+<div class="card"><h2>⚙️ Parents</h2><button class="btn big secondary" onclick="changePin()">Changer le NIP</button></div>`}
+
 function unlock(){if(document.querySelector("#pin").value===data.parentPin){unlocked=true;render()}else toast("NIP incorrect")}
 function approve(id,date){let t=data.tasks.find(x=>x.id===id);if(!t||st(id,date)!=="pending")return;let c=child(t.childId);c.points+=Number(t.points||0);setst(id,"done",date);save();confetti()}
 function redo(id,date){if(st(id,date)==="pending"){setst(id,"redo",date);save()}}
@@ -107,74 +96,84 @@ function editReward(id){let r=data.rewards.find(x=>x.id===id);if(!r)return;let n
 function delReward(id){if(confirm("Supprimer cette récompense?")){data.rewards=data.rewards.filter(x=>x.id!==id);save()}}
 function editChild(id){let c=child(id),n=prompt("Nom :",c.name);if(n===null)return;let a=prompt("Avatar emoji :",c.avatar);if(a===null)return;let p=prompt("Points actuels :",c.points);if(p===null)return;c.name=n||c.name;c.avatar=a||c.avatar;c.points=Math.max(0,Number(p)||0);save()}
 function changePin(){let p=prompt("Nouveau NIP 4 chiffres :",data.parentPin);if(p===null)return;if(/^\d{4}$/.test(p)){data.parentPin=p;save()}else toast("4 chiffres requis")}
-function apiBase(){return(profile.apiUrl||"").replace(/\/+$/,"")}
-async function api(path,opt={}){let h={...(opt.headers||{})};if(opt.body)h["Content-Type"]=profile.token?"application/json":"text/plain;charset=UTF-8";if(profile.token)h.Authorization="Bearer "+profile.token;let r=await fetch(apiBase()+path,{...opt,headers:h}),j=await r.json().catch(()=>({}));if(!r.ok){let e=new Error(j.error||"Erreur "+r.status);e.status=r.status;e.data=j;throw e}return j}
-async function createFamily(){profile.apiUrl=document.querySelector("#apiUrl").value.trim();profile.memberName=document.querySelector("#memberName").value.trim()||"Parent";if(!profile.apiUrl)return toast("Colle l'adresse du serveur");try{let j=await api("/api/family/create",{method:"POST",body:JSON.stringify({familyName:"Mission Maison",memberName:profile.memberName,timezone:"America/Toronto"})});Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:j.version||0});saveProf();dirty=true;await pushCloud();render();toast("Famille créée ✅")}catch(e){toast("Impossible : "+e.message)}}
-async function joinFamily(){profile.apiUrl=document.querySelector("#joinApi").value.trim();profile.memberName=document.querySelector("#joinName").value.trim()||"Appareil";let code=document.querySelector("#joinCode").value.trim().toUpperCase();if(!profile.apiUrl||!code)return toast("Adresse + code requis");try{let j=await api("/api/family/join",{method:"POST",body:JSON.stringify({joinCode:code,memberName:profile.memberName})});Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:0});saveProf();dirty=false;await pullCloud(true);view="kids";render();toast("Famille rejointe ✅")}catch(e){toast("Impossible : "+e.message)}}
-async function pushCloud(){if(!profile.token||busy)return;busy=true;try{let j=await api("/api/state",{method:"PUT",body:JSON.stringify({version:Number(profile.cloudVersion||0),data})});profile.cloudVersion=Number(j.version||0);saveProf();dirty=false;render()}catch(e){if(e.status===409&&e.data?.data){data=e.data.data;profile.cloudVersion=Number(e.data.version||0);saveProf();dirty=false;
-let installPrompt=null;
-window.addEventListener("beforeinstallprompt",e=>{
-  e.preventDefault();
-  installPrompt=e;
-  render();
-});
-window.addEventListener("appinstalled",()=>{
-  installPrompt=null;
-  toast("Mission Maison installée ✅");
-  render();
-});
-async function installApp(){
-  if(!installPrompt){
-    toast("Ouvre le menu du navigateur puis choisis Installer l’application / Ajouter à l’écran d’accueil.");
-    return;
-  }
-  installPrompt.prompt();
-  try{await installPrompt.userChoice}catch(e){}
-  installPrompt=null;
-  render();
-}
-function isStandalone(){
-  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true;
-}
 
-localStorage.setItem(STORE,JSON.stringify(data));render();toast("Une autre modification est arrivée — réessaie")}else toast("Sync à vérifier")}finally{busy=false}}
-async function pullCloud(force=false){if(!profile.token||busy||(dirty&&!force))return;busy=true;try{let j=await api("/api/state");if(j.data?.schemaVersion===2){data=j.data;profile.cloudVersion=Number(j.version||0);saveProf();localStorage.setItem(STORE,JSON.stringify(data));render()}}catch(e){if(force)toast("Sync impossible")}finally{busy=false}}
-function leave(){if(confirm("Déconnecter cet appareil?")){profile={apiUrl:profile.apiUrl||"",token:"",memberName:"",joinCode:"",cloudVersion:0};saveProf();render()}}
-function family(){if(profile.token)return `<div class="card"><h2>☁️ Famille synchronisée</h2><div class="notice">Même tâches, points et confirmations sur tous les appareils.</div><div class="code">${esc(profile.joinCode)}</div><div class="small" style="text-align:center">Code à mettre sur les autres appareils</div><p><b>Appareil :</b> ${esc(profile.memberName)}</p><p class="small"><b>Serveur :</b> ${esc(profile.apiUrl)}</p><button class="btn big secondary" onclick="pullCloud(true)">🔄 Synchroniser</button><button class="btn big danger" onclick="leave()">Déconnecter cet appareil</button></div><div class="card"><h3>Sur le cell de ta blonde et la tablette</h3><div class="notice">Ouvre Mission Maison → ☁️ Famille → colle la même adresse du serveur → entre le code <b>${esc(profile.joinCode)}</b> → Rejoindre.</div></div>`;return `<div class="card cloud"><h2>☁️ Créer le partage</h2><div class="notice">Dans <b>Budget Pack → Réglages → Partage familial</b>, copie l'<b>Adresse du serveur</b>. Colle-la ici. On réutilise le serveur déjà en marche.</div><input id="apiUrl" placeholder="https://...workers.dev" value="${esc(profile.apiUrl||"")}"><input id="memberName" placeholder="Ton nom, ex. Francis"><button class="btn big primary" onclick="createFamily()">🏠 Créer ma famille Mission Maison</button></div><div class="card cloud"><h2>🔗 Rejoindre une famille</h2><input id="joinApi" placeholder="Même adresse du serveur" value="${esc(profile.apiUrl||"")}"><input id="joinName" placeholder="Ex. Maman ou Tablette enfants"><input id="joinCode" placeholder="CODE FAMILLE"><button class="btn big success" onclick="joinFamily()">Rejoindre</button></div>`}
+function apiBase(){return API_DEFAULT}
+async function parseResponse(r){let j={};try{j=await r.json()}catch{}if(!r.ok){let e=new Error(j.error||("Erreur "+r.status));e.status=r.status;e.data=j;throw e}return j}
+async function api(path,opt={}){
+  const url=apiBase()+path, method=opt.method||"GET";
+  const headers={Accept:"application/json",...(opt.headers||{})};
+  if(opt.body)headers["Content-Type"]=profile.token?"application/json":"text/plain;charset=UTF-8";
+  if(profile.token)headers.Authorization="Bearer "+profile.token;
+  try{
+    const r=await fetch(url,{method,body:opt.body,headers,mode:"cors",cache:"no-store",redirect:"follow"});
+    if(r.status===405 && (path==="/api/family/join"||path==="/api/family/create")){
+      return await xhrApi(path,opt);
+    }
+    return await parseResponse(r);
+  }catch(e){
+    if((path==="/api/family/join"||path==="/api/family/create") && e.status!==404){
+      return await xhrApi(path,opt);
+    }
+    throw e;
+  }
+}
+function xhrApi(path,opt={}){
+  return new Promise((resolve,reject)=>{
+    const x=new XMLHttpRequest();
+    x.open(opt.method||"GET",apiBase()+path,true);
+    x.setRequestHeader("Accept","application/json");
+    if(opt.body)x.setRequestHeader("Content-Type",profile.token?"application/json":"text/plain;charset=UTF-8");
+    if(profile.token)x.setRequestHeader("Authorization","Bearer "+profile.token);
+    x.onload=()=>{
+      let j={};try{j=JSON.parse(x.responseText||"{}")}catch{}
+      if(x.status>=200&&x.status<300)resolve(j);
+      else{let e=new Error(j.error||("Erreur "+x.status));e.status=x.status;e.data=j;reject(e)}
+    };
+    x.onerror=()=>reject(new Error("Connexion au serveur impossible"));
+    x.send(opt.body||null);
+  })
+}
+async function testServer(){
+  try{let j=await api("/api/health");toast(j.ok?"Serveur OK ✅":"Serveur répond")}catch(e){toast("Serveur : "+e.message)}
+}
+async function createFamily(){
+  profile.apiUrl=API_DEFAULT;profile.memberName=document.querySelector("#memberName").value.trim()||"Parent";
+  try{let j=await api("/api/family/create",{method:"POST",body:JSON.stringify({familyName:"Mission Maison",memberName:profile.memberName,timezone:"America/Toronto"})});Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:j.version||0,apiUrl:API_DEFAULT});saveProf();dirty=true;await pushCloud();render();toast("Famille créée ✅")}catch(e){toast("Impossible : "+e.message)}
+}
+async function joinFamily(){
+  profile.apiUrl=API_DEFAULT;profile.memberName=document.querySelector("#joinName").value.trim()||"Appareil";
+  let code=document.querySelector("#joinCode").value.trim().toUpperCase();
+  if(!code)return toast("Entre le code famille");
+  try{let j=await api("/api/family/join",{method:"POST",body:JSON.stringify({joinCode:code,memberName:profile.memberName})});Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:0,apiUrl:API_DEFAULT});saveProf();dirty=false;await pullCloud(true);view="kids";render();toast("Famille rejointe ✅")}catch(e){toast("Impossible : "+e.message)}
+}
+async function pushCloud(){if(!profile.token||busy)return;busy=true;try{let j=await api("/api/state",{method:"PUT",body:JSON.stringify({version:Number(profile.cloudVersion||0),data})});profile.cloudVersion=Number(j.version||0);saveProf();dirty=false;render()}catch(e){if(e.status===409&&e.data?.data){data=e.data.data;profile.cloudVersion=Number(e.data.version||0);saveProf();dirty=false;localStorage.setItem(STORE,JSON.stringify(data));render();toast("Une autre modification est arrivée — réessaie")}else toast("Sync à vérifier")}finally{busy=false}}
+async function pullCloud(force=false){if(!profile.token||busy||(dirty&&!force))return;busy=true;try{let j=await api("/api/state");if(j.data?.schemaVersion===2){data=j.data;profile.cloudVersion=Number(j.version||0);saveProf();localStorage.setItem(STORE,JSON.stringify(data));render()}}catch(e){if(force)toast("Sync impossible : "+e.message)}finally{busy=false}}
+function leave(){if(confirm("Déconnecter cet appareil?")){profile={apiUrl:API_DEFAULT,token:"",memberName:"",joinCode:"",cloudVersion:0};saveProf();render()}}
+
+function family(){
+if(profile.token)return `<div class="card"><h2>☁️ Famille synchronisée</h2><div class="notice">Même tâches, points et confirmations sur tous les appareils.</div><div class="code">${esc(profile.joinCode)}</div><div class="small" style="text-align:center">Code à mettre sur les autres appareils</div><p><b>Appareil :</b> ${esc(profile.memberName)}</p><button class="btn big secondary" onclick="pullCloud(true)">🔄 Synchroniser</button><button class="btn big danger" onclick="leave()">Déconnecter cet appareil</button></div>`;
+return `<div class="card cloud"><h2>☁️ Créer le partage</h2><div class="notice">Le serveur est déjà configuré automatiquement. Tu n’as plus besoin de copier une adresse.</div><input id="memberName" placeholder="Ton nom, ex. Francis"><button class="btn big primary" onclick="createFamily()">🏠 Créer ma famille Mission Maison</button></div>
+<div class="card cloud"><h2>🔗 Rejoindre une famille</h2><div class="notice">Écris seulement le nom de l’appareil et le code famille.</div><input id="joinName" placeholder="Ex. Maman ou Tablette enfants"><input id="joinCode" placeholder="CODE FAMILLE"><button class="btn big success" onclick="joinFamily()">Rejoindre</button><button class="btn big secondary" onclick="testServer()">🧪 Tester le serveur</button></div>`}
+
 function confetti(){for(let i=0;i<16;i++){let s=document.createElement("span");s.textContent=["⭐","🎉","✨","🏆"][Math.floor(Math.random()*4)];s.style.cssText=`position:fixed;left:${10+Math.random()*80}vw;top:-30px;font-size:${18+Math.random()*17}px;z-index:99999;transition:transform 1.1s linear,opacity 1.1s`;document.body.appendChild(s);requestAnimationFrame(()=>{s.style.transform=`translateY(${55+Math.random()*80}vh) rotate(${Math.random()*500}deg)`;s.style.opacity="0"});setTimeout(()=>s.remove(),1200)}}
-function render(){if(!child(active))active=data.children[0]?.id;document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>${!isStandalone()?`<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>`:""}${view==="kids"?kids():view==="parents"?parents():family()}<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"}</div></div>`}
 
-let installPrompt=null;
-window.addEventListener("beforeinstallprompt",e=>{
-  e.preventDefault();
-  installPrompt=e;
-  render();
-});
-window.addEventListener("appinstalled",()=>{
-  installPrompt=null;
-  toast("Mission Maison installée ✅");
-  render();
-});
-async function installApp(){
-  if(!installPrompt){
-    toast("Ouvre le menu du navigateur puis choisis Installer l’application / Ajouter à l’écran d’accueil.");
-    return;
-  }
-  installPrompt.prompt();
-  try{await installPrompt.userChoice}catch(e){}
-  installPrompt=null;
-  render();
-}
-function isStandalone(){
-  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true;
-}
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;render()});
+window.addEventListener("appinstalled",()=>{installPrompt=null;toast("Mission Maison installée ✅");render()});
+async function installApp(){if(!installPrompt){toast("Menu du navigateur → Installer l’application / Ajouter à l’écran d’accueil");return}installPrompt.prompt();try{await installPrompt.userChoice}catch{}installPrompt=null;render()}
+function isStandalone(){return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true}
 
-localStorage.setItem(STORE,JSON.stringify(data));render();if(profile.token)pullCloud(true);setInterval(()=>{if(profile.token&&document.visibilityState==="visible")pullCloud()},5000);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&profile.token)pullCloud(true)});
+function render(){
+if(!child(active))active=data.children[0]?.id;
+document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>
+${!isStandalone()?`<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>`:""}
+${view==="kids"?kids():view==="parents"?parents():family()}
+<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.1</div></div>`}
 
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.warn));
-}
-
+localStorage.setItem(STORE,JSON.stringify(data));saveProf();render();
+if(profile.token)pullCloud(true);
+setInterval(()=>{if(profile.token&&document.visibilityState==="visible")pullCloud()},5000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&profile.token)pullCloud(true)});
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
 </script>
 </body>
 </html>
