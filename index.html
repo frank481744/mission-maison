@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <title>Mission Maison</title>
+    <style>
+
+:root{
+  --bg:#0f172a;--panel:#111827;--panel2:#1f2937;--line:#334155;--text:#f8fafc;--muted:#cbd5e1;
+  --accent:#fbbf24;--green:#22c55e;--red:#ef4444;--blue:#38bdf8;--purple:#a78bfa;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#0f172a,#111827 40%,#0b1220);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:980px;margin:auto;padding:18px 16px 40px}
+.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px}
+.brand{font-size:28px;font-weight:900;letter-spacing:.4px}
+.sub{color:var(--muted);font-size:14px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:#172033;color:white;border-radius:999px;padding:10px 14px;font-weight:800}
+.tab.active{background:var(--accent);color:#1f2937;border-color:var(--accent)}
+.card{background:rgba(17,24,39,.94);border:1px solid var(--line);border-radius:22px;padding:16px;margin:12px 0;box-shadow:0 10px 28px rgba(0,0,0,.18)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.child-card{position:relative;overflow:hidden}
+.avatar{font-size:46px}
+.name{font-size:21px;font-weight:900}
+.points{font-size:18px;font-weight:900;color:var(--accent)}
+.pending{color:var(--blue);font-weight:800;font-size:14px}
+.progress{height:12px;background:#263244;border-radius:999px;overflow:hidden;margin:10px 0}
+.progress > div{height:100%;background:linear-gradient(90deg,#22c55e,#84cc16)}
+.bigbtn{width:100%;border:0;border-radius:16px;padding:14px;font-weight:900;margin-top:10px}
+.primary{background:var(--accent);color:#111827}
+.success{background:var(--green);color:#052e16}
+.danger{background:var(--red);color:#fff}
+.secondary{background:#263244;color:#fff;border:1px solid #3b4a61}
+.task{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:18px;background:#121a2a;margin:10px 0}
+.task .emoji{font-size:30px}
+.task .grow{flex:1}
+.task-title{font-weight:900;font-size:18px}
+.task-meta{font-size:13px;color:var(--muted);margin-top:3px}
+.status{display:inline-block;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:900}
+.status.todo{background:#273244;color:#e2e8f0}
+.status.pending{background:#0c4a6e;color:#bae6fd}
+.status.done{background:#14532d;color:#bbf7d0}
+.status.redo{background:#7f1d1d;color:#fecaca}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.actions button{border:0;border-radius:12px;padding:9px 11px;font-weight:900}
+.statline{display:flex;justify-content:space-between;gap:8px;align-items:center}
+h2,h3{margin:8px 0 12px}
+.reward{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:16px;margin:8px 0;background:#121a2a}
+.reward .emoji{font-size:30px}
+.reward .grow{flex:1}
+.small{font-size:12px;color:var(--muted)}
+.notice{border:1px dashed #475569;border-radius:16px;padding:12px;color:#cbd5e1;background:#0b1322}
+.parent-lock{display:flex;gap:8px}
+.parent-lock input{flex:1;border-radius:12px;border:1px solid var(--line);background:#0b1322;color:#fff;padding:12px}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.formgrid input,.formgrid select{width:100%;border:1px solid var(--line);background:#0b1322;color:white;border-radius:12px;padding:11px}
+hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#263244;color:#dbeafe;font-size:12px;font-weight:800}
+.footer{color:#94a3b8;text-align:center;margin-top:22px;font-size:12px}
+@media (max-width:600px){.brand{font-size:24px}.topbar{align-items:flex-start;flex-direction:column}.wrap{padding:14px 12px 30px}}
+
+</style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+
+const STORAGE = "mission-maison-v1";
+const defaultData = {
+  parentPin:"1234",
+  activeChildId:"c1",
+  children:[
+    {id:"c1",name:"Dylan",avatar:"🦸",points:80},
+    {id:"c2",name:"Nolan",avatar:"🦖",points:45},
+    {id:"c3",name:"Enfant 3",avatar:"🦄",points:20},
+    {id:"c4",name:"Enfant 4",avatar:"🐼",points:10},
+    {id:"c5",name:"Enfant 5",avatar:"🐯",points:0},
+    {id:"c6",name:"Enfant 6",avatar:"🦊",points:0},
+  ],
+  tasks:[
+    {id:"t1",childId:"c1",title:"Ranger sa chambre",emoji:"🛏️",points:20,status:"todo"},
+    {id:"t2",childId:"c1",title:"Mettre la table",emoji:"🍽️",points:10,status:"todo"},
+    {id:"t3",childId:"c1",title:"Nourrir le chien",emoji:"🐶",points:10,status:"pending"},
+    {id:"t4",childId:"c2",title:"Ramasser les jouets",emoji:"🧸",points:15,status:"todo"},
+    {id:"t5",childId:"c2",title:"Mettre le linge sale au panier",emoji:"🧺",points:10,status:"done"},
+  ],
+  rewards:[
+    {id:"r1",title:"Choisir le film",emoji:"🎬",cost:80},
+    {id:"r2",title:"Dessert spécial",emoji:"🍦",cost:120},
+    {id:"r3",title:"30 min de jeu en plus",emoji:"🎮",cost:150},
+  ],
+  rewardRequests:[]
+};
+let data = load();
+let view = "kids";
+let parentUnlocked = false;
+
+function load(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE)) || structuredClone(defaultData) }
+  catch(e){ return structuredClone(defaultData) }
+}
+function save(){ localStorage.setItem(STORAGE,JSON.stringify(data)); render(); }
+function esc(s){ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])) }
+function child(id){ return data.children.find(c=>c.id===id) }
+function tasksFor(id){ return data.tasks.filter(t=>t.childId===id) }
+function pendingPts(id){ return tasksFor(id).filter(t=>t.status==="pending").reduce((a,b)=>a+b.points,0) }
+function completedCount(id){ return tasksFor(id).filter(t=>t.status==="done"||t.status==="pending").length }
+function pct(id){ const ts=tasksFor(id); return ts.length?Math.round(completedCount(id)/ts.length*100):0 }
+
+function tabs(){
+  return `<div class="tabs">
+    <button class="tab ${view==="kids"?"active":""}" onclick="view='kids';render()">🎮 Enfants</button>
+    <button class="tab ${view==="parents"?"active":""}" onclick="view='parents';render()">🔒 Parents</button>
+  </div>`;
+}
+
+function kidsView(){
+  const c = child(data.activeChildId) || data.children[0];
+  return `
+  <div class="grid">
+    ${data.children.map(x=>`
+      <button class="card child-card" style="text-align:left;color:white" onclick="data.activeChildId='${x.id}';save()">
+        <div class="avatar">${x.avatar}</div>
+        <div class="name">${esc(x.name)}</div>
+        <div class="points">⭐ ${x.points} points</div>
+        <div class="pending">+ ${pendingPts(x.id)} en attente</div>
+        <div class="progress"><div style="width:${pct(x.id)}%"></div></div>
+        <div class="small">${completedCount(x.id)}/${tasksFor(x.id).length} missions faites aujourd'hui</div>
+      </button>`).join("")}
+  </div>
+
+  <div class="card">
+    <div class="statline"><h2>${c.avatar} Missions de ${esc(c.name)}</h2><span class="pill">⭐ ${c.points}</span></div>
+    <div class="notice">Tu peux faire toutes tes missions sans attendre un parent. Les points sont ajoutés seulement après confirmation. 👍</div>
+    ${tasksFor(c.id).map(taskCardKid).join("") || `<p class="sub">Aucune mission pour aujourd'hui.</p>`}
+  </div>
+
+  <div class="card">
+    <h2>🎁 Récompenses</h2>
+    ${data.rewards.map(r=>rewardCard(c,r)).join("")}
+  </div>`;
+}
+
+function taskCardKid(t){
+  const statusTxt = t.status==="todo"?"À faire":t.status==="pending"?"En attente d'un parent":t.status==="done"?"Confirmée ✅":"À refaire";
+  let btn = "";
+  if(t.status==="todo"||t.status==="redo") btn = `<button class="success" onclick="finishTask('${t.id}')">✅ J'ai terminé!</button>`;
+  return `<div class="task">
+    <div class="emoji">${t.emoji}</div>
+    <div class="grow">
+      <div class="task-title">${esc(t.title)}</div>
+      <div class="task-meta">⭐ ${t.points} points</div>
+      <div style="margin-top:7px"><span class="status ${t.status}">${statusTxt}</span></div>
+      <div class="actions">${btn}</div>
+    </div>
+  </div>`;
+}
+
+function finishTask(id){
+  const t=data.tasks.find(x=>x.id===id); if(!t)return;
+  t.status="pending"; save(); confettiMini();
+}
+function rewardCard(c,r){
+  const pendingReq = data.rewardRequests.find(q=>q.childId===c.id&&q.rewardId===r.id&&q.status==="pending");
+  return `<div class="reward">
+    <div class="emoji">${r.emoji}</div>
+    <div class="grow"><b>${esc(r.title)}</b><div class="small">Coûte ⭐ ${r.cost}</div></div>
+    ${pendingReq?`<span class="status pending">Demandée</span>`:
+      `<button class="secondary" onclick="requestReward('${c.id}','${r.id}')" ${c.points<r.cost?"disabled":""}>Je la veux</button>`}
+  </div>`;
+}
+function requestReward(childId,rewardId){
+  const c=child(childId), r=data.rewards.find(x=>x.id===rewardId); if(!c||!r||c.points<r.cost)return;
+  data.rewardRequests.push({id:"q"+Date.now(),childId,rewardId,status:"pending"}); save();
+}
+
+function parentView(){
+  if(!parentUnlocked){
+    return `<div class="card">
+      <h2>🔒 Mode Parents</h2>
+      <p class="sub">Entrez le NIP parent pour confirmer les tâches et les récompenses.</p>
+      <div class="parent-lock"><input id="pin" inputmode="numeric" placeholder="NIP parent"><button class="primary" onclick="unlock()">Déverrouiller</button></div>
+      <div class="small" style="margin-top:10px">NIP de démo : 1234 — vous pourrez le changer.</div>
+    </div>`;
+  }
+  const pendingTasks=data.tasks.filter(t=>t.status==="pending");
+  const pendingRewards=data.rewardRequests.filter(q=>q.status==="pending");
+  return `
+    <div class="card">
+      <div class="statline"><h2>⏳ À confirmer</h2><span class="pill">${pendingTasks.length} tâche(s)</span></div>
+      ${pendingTasks.map(parentPendingTask).join("") || `<p class="sub">Rien à confirmer pour l'instant 🎉</p>`}
+    </div>
+
+    <div class="card">
+      <h2>🎁 Récompenses demandées</h2>
+      ${pendingRewards.map(parentRewardReq).join("") || `<p class="sub">Aucune demande en attente.</p>`}
+    </div>
+
+    <div class="card">
+      <h2>➕ Ajouter une mission</h2>
+      <div class="formgrid">
+        <select id="newChild">${data.children.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>
+        <input id="newTitle" placeholder="Ex. Faire son lit">
+        <input id="newEmoji" placeholder="Emoji" value="🧹">
+        <input id="newPoints" type="number" min="0" value="10" placeholder="Points">
+      </div>
+      <button class="bigbtn primary" onclick="addTask()">Ajouter la mission</button>
+    </div>
+
+    <div class="card">
+      <h2>👧👦 Enfants</h2>
+      ${data.children.map(c=>`<div class="reward"><div class="emoji">${c.avatar}</div><div class="grow"><b>${esc(c.name)}</b><div class="small">⭐ ${c.points} points</div></div><button class="secondary" onclick="renameChild('${c.id}')">Modifier</button></div>`).join("")}
+    </div>
+
+    <div class="card">
+      <h2>⚙️ Réglages</h2>
+      <button class="secondary bigbtn" onclick="changePin()">Changer le NIP parent</button>
+      <button class="danger bigbtn" onclick="resetDemo()">Réinitialiser les données de démo</button>
+    </div>`;
+}
+
+function parentPendingTask(t){
+  const c=child(t.childId);
+  return `<div class="task">
+    <div class="emoji">${t.emoji}</div>
+    <div class="grow">
+      <div class="task-title">${esc(c?.name||"Enfant")} — ${esc(t.title)}</div>
+      <div class="task-meta">À confirmer • ⭐ ${t.points}</div>
+      <div class="actions">
+        <button class="success" onclick="approveTask('${t.id}')">✅ Confirmer</button>
+        <button class="danger" onclick="redoTask('${t.id}')">↩️ À refaire</button>
+      </div>
+    </div>
+  </div>`;
+}
+function approveTask(id){
+  const t=data.tasks.find(x=>x.id===id); if(!t||t.status!=="pending")return;
+  t.status="done"; const c=child(t.childId); if(c)c.points+=Number(t.points||0); save(); confettiMini();
+}
+function redoTask(id){ const t=data.tasks.find(x=>x.id===id); if(t){t.status="redo";save()} }
+
+function parentRewardReq(q){
+  const c=child(q.childId), r=data.rewards.find(x=>x.id===q.rewardId);
+  return `<div class="reward"><div class="emoji">${r?.emoji||"🎁"}</div><div class="grow"><b>${esc(c?.name||"Enfant")} veut : ${esc(r?.title||"Récompense")}</b><div class="small">Coût ⭐ ${r?.cost||0}</div></div>
+  <div class="actions"><button class="success" onclick="approveReward('${q.id}')">✅ Donner</button><button class="danger" onclick="denyReward('${q.id}')">❌ Refuser</button></div></div>`;
+}
+function approveReward(id){
+  const q=data.rewardRequests.find(x=>x.id===id); if(!q||q.status!=="pending")return;
+  const c=child(q.childId), r=data.rewards.find(x=>x.id===q.rewardId);
+  if(c&&r&&c.points>=r.cost){c.points-=r.cost;q.status="approved";save();confettiMini();}
+}
+function denyReward(id){const q=data.rewardRequests.find(x=>x.id===id);if(q){q.status="denied";save()}}
+
+function unlock(){
+  const v=document.getElementById("pin").value;
+  if(v===data.parentPin){parentUnlocked=true;render()} else alert("NIP incorrect");
+}
+function addTask(){
+  const childId=document.getElementById("newChild").value;
+  const title=document.getElementById("newTitle").value.trim();
+  const emoji=document.getElementById("newEmoji").value.trim()||"🧹";
+  const points=Number(document.getElementById("newPoints").value||0);
+  if(!title)return alert("Écris le nom de la mission.");
+  data.tasks.push({id:"t"+Date.now(),childId,title,emoji,points,status:"todo"}); save();
+}
+function renameChild(id){
+  const c=child(id); if(!c)return;
+  const n=prompt("Nom de l'enfant :",c.name); if(n===null)return;
+  const a=prompt("Avatar emoji :",c.avatar); if(a===null)return;
+  c.name=n.trim()||c.name; c.avatar=a.trim()||c.avatar; save();
+}
+function changePin(){
+  const p=prompt("Nouveau NIP parent (4 chiffres) :",data.parentPin);
+  if(p && /^\d{4}$/.test(p)){data.parentPin=p;save()} else if(p!==null) alert("Le NIP doit avoir 4 chiffres.");
+}
+function resetDemo(){
+  if(confirm("Remettre l'application comme au début?")){data=structuredClone(defaultData);parentUnlocked=false;save();}
+}
+function confettiMini(){
+  const b=document.body;
+  for(let i=0;i<22;i++){
+    const s=document.createElement("span");
+    s.textContent=["⭐","🎉","✨","🏆"][Math.floor(Math.random()*4)];
+    s.style.position="fixed";s.style.left=(10+Math.random()*80)+"vw";s.style.top="-30px";s.style.fontSize=(18+Math.random()*18)+"px";s.style.zIndex=9999;s.style.transition="transform 1.2s linear,opacity 1.2s";
+    b.appendChild(s); requestAnimationFrame(()=>{s.style.transform=`translateY(${60+Math.random()*80}vh) rotate(${Math.random()*540}deg)`;s.style.opacity="0"});
+    setTimeout(()=>s.remove(),1300);
+  }
+}
+function render(){
+  document.getElementById("app").innerHTML=`<div class="wrap">
+    <div class="topbar"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div></div>${tabs()}</div>
+    ${view==="kids"?kidsView():parentView()}
+    <div class="footer">Version prototype locale • prochaine étape : synchronisation familiale entre appareils</div>
+  </div>`;
+}
+render();
+
+</script>
+</body>
+</html>
