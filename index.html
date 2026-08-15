@@ -62,7 +62,21 @@ function dlabel(d){d=d||ALL;if(d.length===7)return"Tous les jours";if(JSON.strin
 function choose(id){active=id;localStorage.setItem(ACTIVE,id);render()}
 function tabs(){return `<div class="tabs"><button class="tab ${view==="kids"?"on":""}" onclick="view='kids';render()">🎮 Enfants</button><button class="tab ${view==="parents"?"on":""}" onclick="view='parents';render()">🔒 Parents</button><button class="tab ${view==="family"?"on":""}" onclick="view='family';render()">☁️ Famille</button></div>`}
 
-function kidTask(t){let s=st(t.id),txt=s==="todo"?"À faire":s==="pending"?"En attente du parent":s==="done"?"Confirmée ✅":"À refaire";return `<div class="task"><div class="emoji">${t.emoji}</div><div class="grow"><div class="title">${esc(t.title)}</div><div class="small">⭐ ${t.points} points</div><span class="status ${s}">${txt}</span>${["todo","redo"].includes(s)?`<div class="actions"><button class="btn success" onclick="finish('${t.id}')">✅ J'ai terminé!</button></div>`:""}</div></div>`}
+function speakTask(id){
+  const t=data.tasks.find(x=>x.id===id);
+  if(!t)return;
+  if(!("speechSynthesis" in window))return toast("La lecture vocale n'est pas disponible sur cet appareil.");
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t.title);
+  u.lang="fr-CA";
+  u.rate=0.9;
+  u.pitch=1;
+  const voices=window.speechSynthesis.getVoices();
+  const fr=voices.find(v=>/^fr(-|_)/i.test(v.lang)) || voices.find(v=>/French|Français/i.test(v.name));
+  if(fr)u.voice=fr;
+  window.speechSynthesis.speak(u);
+}
+function kidTask(t){let s=st(t.id),txt=s==="todo"?"À faire":s==="pending"?"En attente du parent":s==="done"?"Confirmée ✅":"À refaire";return `<div class="task"><div class="emoji">${t.emoji}</div><div class="grow"><div class="title">${esc(t.title)}</div><div class="small">⭐ ${t.points} points</div><span class="status ${s}">${txt}</span><div class="actions"><button class="btn primary" onclick="speakTask('${t.id}')">🔊 Lire la tâche</button>${["todo","redo"].includes(s)?`<button class="btn success" onclick="finish('${t.id}')">✅ J'ai terminé!</button>`:""}</div></div></div>`}
 function rewardCard(c,r){let q=data.rewardRequests.find(x=>x.childId===c.id&&x.rewardId===r.id&&x.status==="pending");return `<div class="reward"><div class="emoji">${r.emoji}</div><div class="grow"><b>${esc(r.title)}</b><div class="small">⭐ ${r.cost}</div></div>${q?`<span class="status pending">Demandée</span>`:`<button class="btn secondary" onclick="askReward('${c.id}','${r.id}')" ${c.points<r.cost?"disabled":""}>Je la veux</button>`}</div>`}
 function kids(){let c=child(active)||data.children[0];return `<div class="grid">${data.children.map(x=>`<button class="card child" onclick="choose('${x.id}')"><div class="avatar">${x.avatar}</div><div class="name">${esc(x.name)}</div><div class="pts">⭐ ${x.points}</div><div class="wait">+ ${pendingPts(x.id)} en attente</div><div class="progress"><i style="width:${pct(x.id)}%"></i></div><div class="small">${completed(x.id)}/${tasksFor(x.id).length} missions aujourd'hui</div></button>`).join("")}</div><div class="card"><div class="stat"><h2>${c.avatar} ${esc(c.name)}</h2><span class="pill">⭐ ${c.points}</span></div><div class="notice">Tu peux continuer toutes tes missions sans attendre. Les points arrivent seulement après confirmation. 👍</div>${tasksFor(c.id).map(kidTask).join("")||`<p class="small">Aucune mission aujourd'hui 🎉</p>`}</div><div class="card"><h2>🎁 Récompenses</h2>${data.rewards.map(r=>rewardCard(c,r)).join("")}</div>`}
 function finish(id){if(["pending","done"].includes(st(id)))return;setst(id,"pending");save();confetti()}
@@ -184,7 +198,7 @@ if(!child(active))active=data.children[0]?.id;
 document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>
 ${!isStandalone()?`<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>`:""}
 ${view==="kids"?kids():view==="parents"?parents():family()}
-<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.2</div></div>`}
+<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.3</div></div>`}
 
 localStorage.setItem(STORE,JSON.stringify(data));saveProf();render();
 if(profile.token)pullCloud(true);
