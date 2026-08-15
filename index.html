@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
 <title>Mission Maison</title>
+
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mission Maison">
+
 <style>
 :root{--bg:#0f172a;--card:#111827;--line:#334155;--text:#f8fafc;--muted:#cbd5e1;--yellow:#fbbf24;--green:#22c55e;--red:#ef4444;--blue:#38bdf8}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(#0f172a,#0b1220);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
@@ -18,7 +25,7 @@ button,input,select{font:inherit}.wrap{max-width:980px;margin:auto;padding:16px 
 .actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}button{cursor:pointer}.btn{border:0;border-radius:12px;padding:9px 11px;font-weight:900}.big{width:100%;padding:13px;margin-top:9px}.primary{background:var(--yellow);color:#111827}.success{background:var(--green);color:#052e16}.danger{background:var(--red);color:white}.secondary{background:#263244;color:white;border:1px solid #475569}
 .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}.form input,.form select,.cloud input{width:100%;background:#0b1322;color:white;border:1px solid var(--line);border-radius:11px;padding:10px}.cloud input{margin:5px 0}
 .notice{border:1px dashed #475569;background:#0b1322;border-radius:14px;padding:11px;color:#cbd5e1}.code{text-align:center;color:var(--yellow);font-size:30px;font-weight:950;letter-spacing:4px;padding:10px}.pill{background:#263244;border-radius:99px;padding:5px 8px;font-size:12px;font-weight:900}.stat{display:flex;justify-content:space-between;gap:8px;align-items:center}
-h2,h3{margin:5px 0 11px}.toast{position:fixed;left:50%;bottom:25px;transform:translateX(-50%);background:#020617;border:1px solid #475569;border-radius:13px;padding:11px 15px;font-weight:850;z-index:9999;max-width:90vw;text-align:center}.hidden{display:none}.footer{text-align:center;color:#94a3b8;font-size:11px;margin-top:20px}
+h2,h3{margin:5px 0 11px}.toast{position:fixed;left:50%;bottom:25px;transform:translateX(-50%);background:#020617;border:1px solid #475569;border-radius:13px;padding:11px 15px;font-weight:850;z-index:9999;max-width:90vw;text-align:center}.hidden{display:none}.installBox{margin:12px 0}.footer{text-align:center;color:#94a3b8;font-size:11px;margin-top:20px}
 @media(max-width:600px){.brand{font-size:23px}.stat{align-items:flex-start}}
 </style>
 </head>
@@ -40,7 +47,33 @@ function loadProf(){try{return JSON.parse(localStorage.getItem(PROF))||{apiUrl:"
 let data=load(),profile=loadProf(),view="kids",unlocked=false,active=localStorage.getItem(ACTIVE)||data.children[0].id,busy=false,dirty=false,timer=null;
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 function toast(s){let e=document.querySelector("#toast");e.textContent=s;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),2400)}
-function save(localOnly=false){data.updatedAt=now();localStorage.setItem(STORE,JSON.stringify(data));render();if(!localOnly&&profile.token){dirty=true;clearTimeout(timer);timer=setTimeout(pushCloud,400)}}
+function save(localOnly=false){data.updatedAt=now();
+let installPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  installPrompt=e;
+  render();
+});
+window.addEventListener("appinstalled",()=>{
+  installPrompt=null;
+  toast("Mission Maison installée ✅");
+  render();
+});
+async function installApp(){
+  if(!installPrompt){
+    toast("Ouvre le menu du navigateur puis choisis Installer l’application / Ajouter à l’écran d’accueil.");
+    return;
+  }
+  installPrompt.prompt();
+  try{await installPrompt.userChoice}catch(e){}
+  installPrompt=null;
+  render();
+}
+function isStandalone(){
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true;
+}
+
+localStorage.setItem(STORE,JSON.stringify(data));render();if(!localOnly&&profile.token){dirty=true;clearTimeout(timer);timer=setTimeout(pushCloud,400)}}
 function saveProf(){localStorage.setItem(PROF,JSON.stringify(profile))}
 function child(id){return data.children.find(x=>x.id===id)}
 function st(id,date=day()){return data.taskStates?.[date]?.[id]||"todo"}
@@ -78,13 +111,70 @@ function apiBase(){return(profile.apiUrl||"").replace(/\/+$/,"")}
 async function api(path,opt={}){let h={...(opt.headers||{})};if(opt.body)h["Content-Type"]=profile.token?"application/json":"text/plain;charset=UTF-8";if(profile.token)h.Authorization="Bearer "+profile.token;let r=await fetch(apiBase()+path,{...opt,headers:h}),j=await r.json().catch(()=>({}));if(!r.ok){let e=new Error(j.error||"Erreur "+r.status);e.status=r.status;e.data=j;throw e}return j}
 async function createFamily(){profile.apiUrl=document.querySelector("#apiUrl").value.trim();profile.memberName=document.querySelector("#memberName").value.trim()||"Parent";if(!profile.apiUrl)return toast("Colle l'adresse du serveur");try{let j=await api("/api/family/create",{method:"POST",body:JSON.stringify({familyName:"Mission Maison",memberName:profile.memberName,timezone:"America/Toronto"})});Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:j.version||0});saveProf();dirty=true;await pushCloud();render();toast("Famille créée ✅")}catch(e){toast("Impossible : "+e.message)}}
 async function joinFamily(){profile.apiUrl=document.querySelector("#joinApi").value.trim();profile.memberName=document.querySelector("#joinName").value.trim()||"Appareil";let code=document.querySelector("#joinCode").value.trim().toUpperCase();if(!profile.apiUrl||!code)return toast("Adresse + code requis");try{let j=await api("/api/family/join",{method:"POST",body:JSON.stringify({joinCode:code,memberName:profile.memberName})});Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:0});saveProf();dirty=false;await pullCloud(true);view="kids";render();toast("Famille rejointe ✅")}catch(e){toast("Impossible : "+e.message)}}
-async function pushCloud(){if(!profile.token||busy)return;busy=true;try{let j=await api("/api/state",{method:"PUT",body:JSON.stringify({version:Number(profile.cloudVersion||0),data})});profile.cloudVersion=Number(j.version||0);saveProf();dirty=false;render()}catch(e){if(e.status===409&&e.data?.data){data=e.data.data;profile.cloudVersion=Number(e.data.version||0);saveProf();dirty=false;localStorage.setItem(STORE,JSON.stringify(data));render();toast("Une autre modification est arrivée — réessaie")}else toast("Sync à vérifier")}finally{busy=false}}
+async function pushCloud(){if(!profile.token||busy)return;busy=true;try{let j=await api("/api/state",{method:"PUT",body:JSON.stringify({version:Number(profile.cloudVersion||0),data})});profile.cloudVersion=Number(j.version||0);saveProf();dirty=false;render()}catch(e){if(e.status===409&&e.data?.data){data=e.data.data;profile.cloudVersion=Number(e.data.version||0);saveProf();dirty=false;
+let installPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  installPrompt=e;
+  render();
+});
+window.addEventListener("appinstalled",()=>{
+  installPrompt=null;
+  toast("Mission Maison installée ✅");
+  render();
+});
+async function installApp(){
+  if(!installPrompt){
+    toast("Ouvre le menu du navigateur puis choisis Installer l’application / Ajouter à l’écran d’accueil.");
+    return;
+  }
+  installPrompt.prompt();
+  try{await installPrompt.userChoice}catch(e){}
+  installPrompt=null;
+  render();
+}
+function isStandalone(){
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true;
+}
+
+localStorage.setItem(STORE,JSON.stringify(data));render();toast("Une autre modification est arrivée — réessaie")}else toast("Sync à vérifier")}finally{busy=false}}
 async function pullCloud(force=false){if(!profile.token||busy||(dirty&&!force))return;busy=true;try{let j=await api("/api/state");if(j.data?.schemaVersion===2){data=j.data;profile.cloudVersion=Number(j.version||0);saveProf();localStorage.setItem(STORE,JSON.stringify(data));render()}}catch(e){if(force)toast("Sync impossible")}finally{busy=false}}
 function leave(){if(confirm("Déconnecter cet appareil?")){profile={apiUrl:profile.apiUrl||"",token:"",memberName:"",joinCode:"",cloudVersion:0};saveProf();render()}}
 function family(){if(profile.token)return `<div class="card"><h2>☁️ Famille synchronisée</h2><div class="notice">Même tâches, points et confirmations sur tous les appareils.</div><div class="code">${esc(profile.joinCode)}</div><div class="small" style="text-align:center">Code à mettre sur les autres appareils</div><p><b>Appareil :</b> ${esc(profile.memberName)}</p><p class="small"><b>Serveur :</b> ${esc(profile.apiUrl)}</p><button class="btn big secondary" onclick="pullCloud(true)">🔄 Synchroniser</button><button class="btn big danger" onclick="leave()">Déconnecter cet appareil</button></div><div class="card"><h3>Sur le cell de ta blonde et la tablette</h3><div class="notice">Ouvre Mission Maison → ☁️ Famille → colle la même adresse du serveur → entre le code <b>${esc(profile.joinCode)}</b> → Rejoindre.</div></div>`;return `<div class="card cloud"><h2>☁️ Créer le partage</h2><div class="notice">Dans <b>Budget Pack → Réglages → Partage familial</b>, copie l'<b>Adresse du serveur</b>. Colle-la ici. On réutilise le serveur déjà en marche.</div><input id="apiUrl" placeholder="https://...workers.dev" value="${esc(profile.apiUrl||"")}"><input id="memberName" placeholder="Ton nom, ex. Francis"><button class="btn big primary" onclick="createFamily()">🏠 Créer ma famille Mission Maison</button></div><div class="card cloud"><h2>🔗 Rejoindre une famille</h2><input id="joinApi" placeholder="Même adresse du serveur" value="${esc(profile.apiUrl||"")}"><input id="joinName" placeholder="Ex. Maman ou Tablette enfants"><input id="joinCode" placeholder="CODE FAMILLE"><button class="btn big success" onclick="joinFamily()">Rejoindre</button></div>`}
 function confetti(){for(let i=0;i<16;i++){let s=document.createElement("span");s.textContent=["⭐","🎉","✨","🏆"][Math.floor(Math.random()*4)];s.style.cssText=`position:fixed;left:${10+Math.random()*80}vw;top:-30px;font-size:${18+Math.random()*17}px;z-index:99999;transition:transform 1.1s linear,opacity 1.1s`;document.body.appendChild(s);requestAnimationFrame(()=>{s.style.transform=`translateY(${55+Math.random()*80}vh) rotate(${Math.random()*500}deg)`;s.style.opacity="0"});setTimeout(()=>s.remove(),1200)}}
-function render(){if(!child(active))active=data.children[0]?.id;document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>${view==="kids"?kids():view==="parents"?parents():family()}<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"}</div></div>`}
+function render(){if(!child(active))active=data.children[0]?.id;document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>${!isStandalone()?`<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>`:""}${view==="kids"?kids():view==="parents"?parents():family()}<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"}</div></div>`}
+
+let installPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  installPrompt=e;
+  render();
+});
+window.addEventListener("appinstalled",()=>{
+  installPrompt=null;
+  toast("Mission Maison installée ✅");
+  render();
+});
+async function installApp(){
+  if(!installPrompt){
+    toast("Ouvre le menu du navigateur puis choisis Installer l’application / Ajouter à l’écran d’accueil.");
+    return;
+  }
+  installPrompt.prompt();
+  try{await installPrompt.userChoice}catch(e){}
+  installPrompt=null;
+  render();
+}
+function isStandalone(){
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true;
+}
+
 localStorage.setItem(STORE,JSON.stringify(data));render();if(profile.token)pullCloud(true);setInterval(()=>{if(profile.token&&document.visibilityState==="visible")pullCloud()},5000);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&profile.token)pullCloud(true)});
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.warn));
+}
+
 </script>
 </body>
 </html>
