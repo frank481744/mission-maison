@@ -57,7 +57,7 @@ function normalize(x){
 function migrate(x){if(x?.schemaVersion===2)return normalize(x);let n=clone(base);if(x?.children)n.children=x.children.map(c=>({...c,points:0}));if(x?.tasks)n.tasks=x.tasks.map(t=>({id:t.id||uid("t"),childId:t.childId,title:t.title,emoji:t.emoji||"🧹",points:Number(t.points||0),days:[...ALL]}));if(x?.rewards)n.rewards=x.rewards;return normalize(n)}
 function load(){try{let x=localStorage.getItem(STORE);if(x)return normalize(migrate(JSON.parse(x)));x=localStorage.getItem(OLD);if(x)return normalize(migrate(JSON.parse(x)))}catch{}return normalize(clone(base))}
 function loadProf(){try{return JSON.parse(localStorage.getItem(PROF))||{apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",joinCode:"",cloudVersion:0,pushEnabled:false}}catch{return{apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",joinCode:"",cloudVersion:0,pushEnabled:false}}}
-let data=load(),profile=loadProf(),view="kids",unlocked=false,active=localStorage.getItem(ACTIVE)||data.children[0].id,busy=false,dirty=false,timer=null,installPrompt=null,oneSignalReady=false;
+let data=load(),profile=loadProf(),view="kids",unlocked=false,active=localStorage.getItem(ACTIVE)||data.children[0].id,busy=false,dirty=false,timer=null,installPrompt=null,oneSignalReady=false,oneSignalInitPromise=null,oneSignalSdk=null;
 if(!profile.apiUrl)profile.apiUrl=API_DEFAULT;
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -267,28 +267,57 @@ async function pushCloud(){if(!profile.token||busy)return;busy=true;try{let j=aw
 async function pullCloud(force=false){if(!profile.token||busy||(dirty&&!force))return;busy=true;try{let j=await api("/api/state");if(j.data?.schemaVersion===2){data=normalize(j.data);profile.cloudVersion=Number(j.version||0);saveProf();localStorage.setItem(STORE,JSON.stringify(data));render()}}catch(e){if(force)toast("Sync impossible : "+e.message)}finally{busy=false}}
 function leave(){if(confirm("Déconnecter cet appareil?")){profile={apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",joinCode:"",cloudVersion:0,pushEnabled:false};saveProf();render()}}
 
+function ensureOneSignal(){
+  if(oneSignalInitPromise)return oneSignalInitPromise;
+  oneSignalInitPromise=(async()=>{
+    const cfg=await api("/api/push-config");
+    if(!cfg.appId)throw new Error("Notifications pas encore configurées sur le serveur");
+    return await new Promise((resolve,reject)=>{
+      window.OneSignalDeferred=window.OneSignalDeferred||[];
+      window.OneSignalDeferred.push(async OneSignal=>{
+        try{
+          if(!oneSignalReady){
+            const swUrl=new URL("OneSignalSDKWorker.js",location.href);
+            const swPath=swUrl.pathname.replace(/^\//,"");
+            const swScope=new URL("./push/onesignal/",location.href).pathname;
+            try{
+              await OneSignal.init({appId:cfg.appId,serviceWorkerPath:swPath,serviceWorkerParam:{scope:swScope}});
+            }catch(e){
+              if(!/already initialized/i.test(String(e?.message||e)))throw e;
+            }
+            oneSignalReady=true;
+            oneSignalSdk=OneSignal;
+          }
+          resolve(oneSignalSdk||OneSignal);
+        }catch(e){
+          oneSignalInitPromise=null;
+          reject(e);
+        }
+      });
+    });
+  })();
+  return oneSignalInitPromise;
+}
+
 async function initParentPush(askPermission=true){
   if(!profile.token||!profile.familyId)return toast("Connecte d'abord cet appareil à la famille");
   try{
-    const cfg=await api("/api/push-config");
-    if(!cfg.appId)return toast("Notifications pas encore configurées sur le serveur");
-    window.OneSignalDeferred=window.OneSignalDeferred||[];
-    window.OneSignalDeferred.push(async OneSignal=>{
-      try{
-        if(!oneSignalReady){
-          const swUrl=new URL("OneSignalSDKWorker.js",location.href);
-          const swPath=swUrl.pathname.replace(/^\//,"");
-          const swScope=new URL("./push/onesignal/",location.href).pathname;
-          await OneSignal.init({appId:cfg.appId,serviceWorkerPath:swPath,serviceWorkerParam:{scope:swScope}});
-          oneSignalReady=true;
-        }
-        if(askPermission)await OneSignal.Notifications.requestPermission();
-        OneSignal.User.addTags({mission_family:String(profile.familyId),mission_parent:"1"});
-        profile.pushEnabled=true;saveProf();render();
-        if(askPermission)toast("Notifications parents activées 🔔");
-      }catch(e){console.warn("Mission Maison OneSignal",e);if(askPermission)toast("Notifications : "+(e?.message||"activation impossible"))}
-    });
-  }catch(e){if(askPermission)toast("Notifications : "+e.message)}
+    const OneSignal=await ensureOneSignal();
+    if(askPermission && !OneSignal.Notifications.permission){
+      await OneSignal.Notifications.requestPermission();
+    }
+    if(!OneSignal.Notifications.permission){
+      profile.pushEnabled=false;saveProf();render();
+      if(askPermission)toast("Notifications non autorisées sur cet appareil");
+      return;
+    }
+    await OneSignal.User.addTags({mission_family:String(profile.familyId),mission_parent:"1"});
+    profile.pushEnabled=true;saveProf();render();
+    if(askPermission)toast("Notifications parents activées 🔔");
+  }catch(e){
+    console.warn("Mission Maison OneSignal",e);
+    if(askPermission)toast("Notifications : "+(e?.message||"activation impossible"));
+  }
 }
 async function notifyTaskFinished(t){
   if(!profile.token||!t)return;
@@ -315,7 +344,7 @@ if(!child(active))active=data.children[0]?.id;
 document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>
 ${!isStandalone()?`<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>`:""}
 ${view==="kids"?kids():view==="parents"?parents():family()}
-<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.7</div></div>`}
+<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.8</div></div>`}
 
 localStorage.setItem(STORE,JSON.stringify(data));saveProf();render();
 if(profile.token)pullCloud(true);
