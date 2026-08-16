@@ -33,6 +33,7 @@ h2,h3{margin:5px 0 11px}.toast{position:fixed;left:50%;bottom:25px;transform:tra
 <script>
 const STORE="missionMaisonV2",OLD="mission-maison-v1",PROF="missionMaisonCloudV1",ACTIVE="missionMaisonActive";
 const API_DEFAULT="https://budget-pack-api.2ywtpfbvpb.workers.dev";
+const ONESIGNAL_APP_ID="4770a678-6329-4944-9d54-b01d0b14fc97";
 const ALL=[0,1,2,3,4,5,6],WEEK=[1,2,3,4,5],WKND=[0,6],clone=o=>JSON.parse(JSON.stringify(o));
 const uid=p=>p+"_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,7);
 const now=()=>new Date().toISOString();
@@ -270,8 +271,8 @@ function leave(){if(confirm("Déconnecter cet appareil?")){profile={apiUrl:API_D
 function ensureOneSignal(){
   if(oneSignalInitPromise)return oneSignalInitPromise;
   oneSignalInitPromise=(async()=>{
-    const cfg=await api("/api/push-config");
-    if(!cfg.appId)throw new Error("Notifications pas encore configurées sur le serveur");
+    const appId=ONESIGNAL_APP_ID;
+    if(!appId)throw new Error("Notifications pas encore configurées");
     return await new Promise((resolve,reject)=>{
       window.OneSignalDeferred=window.OneSignalDeferred||[];
       window.OneSignalDeferred.push(async OneSignal=>{
@@ -281,7 +282,7 @@ function ensureOneSignal(){
             const swPath=swUrl.pathname.replace(/^\//,"");
             const swScope=new URL("./push/onesignal/",location.href).pathname;
             try{
-              await OneSignal.init({appId:cfg.appId,serviceWorkerPath:swPath,serviceWorkerParam:{scope:swScope}});
+              await OneSignal.init({appId,serviceWorkerPath:swPath,serviceWorkerParam:{scope:swScope}});
             }catch(e){
               if(!/already initialized/i.test(String(e?.message||e)))throw e;
             }
@@ -344,7 +345,7 @@ if(!child(active))active=data.children[0]?.id;
 document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>
 ${!isStandalone()?`<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>`:""}
 ${view==="kids"?kids():view==="parents"?parents():family()}
-<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.8</div></div>`}
+<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.9</div></div>`}
 
 localStorage.setItem(STORE,JSON.stringify(data));saveProf();render();
 if(profile.token)pullCloud(true);
