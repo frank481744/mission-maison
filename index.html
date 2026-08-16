@@ -276,9 +276,9 @@ async function initParentPush(askPermission=true){
     window.OneSignalDeferred.push(async OneSignal=>{
       try{
         if(!oneSignalReady){
-          const swUrl=new URL("sw.js",location.href);
+          const swUrl=new URL("OneSignalSDKWorker.js",location.href);
           const swPath=swUrl.pathname.replace(/^\//,"");
-          const swScope=new URL("./",location.href).pathname;
+          const swScope=new URL("./push/onesignal/",location.href).pathname;
           await OneSignal.init({appId:cfg.appId,serviceWorkerPath:swPath,serviceWorkerParam:{scope:swScope}});
           oneSignalReady=true;
         }
@@ -286,7 +286,7 @@ async function initParentPush(askPermission=true){
         OneSignal.User.addTags({mission_family:String(profile.familyId),mission_parent:"1"});
         profile.pushEnabled=true;saveProf();render();
         if(askPermission)toast("Notifications parents activées 🔔");
-      }catch(e){console.warn("Mission Maison OneSignal",e);if(askPermission)toast("Impossible d'activer les notifications")}
+      }catch(e){console.warn("Mission Maison OneSignal",e);if(askPermission)toast("Notifications : "+(e?.message||"activation impossible"))}
     });
   }catch(e){if(askPermission)toast("Notifications : "+e.message)}
 }
@@ -315,7 +315,7 @@ if(!child(active))active=data.children[0]?.id;
 document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>
 ${!isStandalone()?`<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>`:""}
 ${view==="kids"?kids():view==="parents"?parents():family()}
-<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.5</div></div>`}
+<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.6</div></div>`}
 
 localStorage.setItem(STORE,JSON.stringify(data));saveProf();render();
 if(profile.token)pullCloud(true);
