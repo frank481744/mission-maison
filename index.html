@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mission Maison">
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <style>
 :root{--bg:#0f172a;--card:#111827;--line:#334155;--text:#f8fafc;--muted:#cbd5e1;--yellow:#fbbf24;--green:#22c55e;--red:#ef4444;--blue:#38bdf8}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(#0f172a,#0b1220);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
@@ -55,8 +56,8 @@ function normalize(x){
 }
 function migrate(x){if(x?.schemaVersion===2)return normalize(x);let n=clone(base);if(x?.children)n.children=x.children.map(c=>({...c,points:0}));if(x?.tasks)n.tasks=x.tasks.map(t=>({id:t.id||uid("t"),childId:t.childId,title:t.title,emoji:t.emoji||"🧹",points:Number(t.points||0),days:[...ALL]}));if(x?.rewards)n.rewards=x.rewards;return normalize(n)}
 function load(){try{let x=localStorage.getItem(STORE);if(x)return normalize(migrate(JSON.parse(x)));x=localStorage.getItem(OLD);if(x)return normalize(migrate(JSON.parse(x)))}catch{}return normalize(clone(base))}
-function loadProf(){try{return JSON.parse(localStorage.getItem(PROF))||{apiUrl:API_DEFAULT,token:"",memberName:"",joinCode:"",cloudVersion:0}}catch{return{apiUrl:API_DEFAULT,token:"",memberName:"",joinCode:"",cloudVersion:0}}}
-let data=load(),profile=loadProf(),view="kids",unlocked=false,active=localStorage.getItem(ACTIVE)||data.children[0].id,busy=false,dirty=false,timer=null,installPrompt=null;
+function loadProf(){try{return JSON.parse(localStorage.getItem(PROF))||{apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",joinCode:"",cloudVersion:0,pushEnabled:false}}catch{return{apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",joinCode:"",cloudVersion:0,pushEnabled:false}}}
+let data=load(),profile=loadProf(),view="kids",unlocked=false,active=localStorage.getItem(ACTIVE)||data.children[0].id,busy=false,dirty=false,timer=null,installPrompt=null,oneSignalReady=false;
 if(!profile.apiUrl)profile.apiUrl=API_DEFAULT;
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -110,7 +111,7 @@ function kidHabit(c,h){
 }
 function rewardCard(c,r){let q=data.rewardRequests.find(x=>x.childId===c.id&&x.rewardId===r.id&&x.status==="pending");return `<div class="reward"><div class="emoji">${r.emoji}</div><div class="grow"><b>${esc(r.title)}</b><div class="small">⭐ ${r.cost}</div></div>${q?`<span class="status pending">Demandée</span>`:`<button class="btn secondary" onclick="askReward('${c.id}','${r.id}')" ${c.points<r.cost?"disabled":""}>Je la veux</button>`}</div>`}
 function kids(){let c=child(active)||data.children[0];return `<div class="grid">${data.children.map(x=>`<button class="card child" onclick="choose('${x.id}')"><div class="avatar">${x.avatar}</div><div class="name">${esc(x.name)}</div><div class="pts">⭐ ${x.points}</div><div class="wait">+ ${pendingPts(x.id)} en attente</div><div class="progress"><i style="width:${pct(x.id)}%"></i></div><div class="small">${completed(x.id)}/${tasksFor(x.id).length} missions aujourd'hui</div></button>`).join("")}</div><div class="card"><div class="stat"><h2>${c.avatar} ${esc(c.name)}</h2><span class="pill">⭐ ${c.points}</span></div><div class="notice">Tu peux continuer toutes tes missions sans attendre. Les points arrivent seulement après confirmation. 👍</div>${tasksFor(c.id).map(kidTask).join("")||`<p class="small">Aucune mission aujourd'hui 🎉</p>`}</div><div class="card"><h2>🧼 Petites habitudes</h2><div class="notice">Les gestes normaux de la maison. Pas de points : on les fait simplement chaque jour. 💪</div>${habitsFor(c.id).map(h=>kidHabit(c,h)).join("")||`<p class="small">Aucune petite habitude aujourd'hui.</p>`}</div><div class="card"><h2>🎁 Récompenses</h2>${data.rewards.map(r=>rewardCard(c,r)).join("")}</div>`}
-function finish(id){if(["pending","done"].includes(st(id)))return;setTaskNote(id,"");setst(id,"pending");save();confetti()}
+function finish(id){if(["pending","done"].includes(st(id)))return;const t=data.tasks.find(x=>x.id===id);setTaskNote(id,"");setst(id,"pending");save();confetti();notifyTaskFinished(t)}
 function toggleHabit(cid,hid){setHabitDone(cid,hid,!habitDone(cid,hid));save()}
 function askReward(cid,rid){let c=child(cid),r=data.rewards.find(x=>x.id===rid);if(!c||!r||c.points<r.cost)return;data.rewardRequests.push({id:uid("q"),childId:cid,rewardId:rid,status:"pending",createdAt:now()});save();toast("Demande envoyée 🎁")}
 
@@ -264,10 +265,41 @@ async function joinFamily(){
 }
 async function pushCloud(){if(!profile.token||busy)return;busy=true;try{let j=await api("/api/state",{method:"PUT",body:JSON.stringify({version:Number(profile.cloudVersion||0),data})});profile.cloudVersion=Number(j.version||0);saveProf();dirty=false;render()}catch(e){if(e.status===409&&e.data?.data){data=normalize(e.data.data);profile.cloudVersion=Number(e.data.version||0);saveProf();dirty=false;localStorage.setItem(STORE,JSON.stringify(data));render();toast("Une autre modification est arrivée — réessaie")}else toast("Sync à vérifier")}finally{busy=false}}
 async function pullCloud(force=false){if(!profile.token||busy||(dirty&&!force))return;busy=true;try{let j=await api("/api/state");if(j.data?.schemaVersion===2){data=normalize(j.data);profile.cloudVersion=Number(j.version||0);saveProf();localStorage.setItem(STORE,JSON.stringify(data));render()}}catch(e){if(force)toast("Sync impossible : "+e.message)}finally{busy=false}}
-function leave(){if(confirm("Déconnecter cet appareil?")){profile={apiUrl:API_DEFAULT,token:"",memberName:"",joinCode:"",cloudVersion:0};saveProf();render()}}
+function leave(){if(confirm("Déconnecter cet appareil?")){profile={apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",joinCode:"",cloudVersion:0,pushEnabled:false};saveProf();render()}}
+
+async function initParentPush(askPermission=true){
+  if(!profile.token||!profile.familyId)return toast("Connecte d'abord cet appareil à la famille");
+  try{
+    const cfg=await api("/api/push-config");
+    if(!cfg.appId)return toast("Notifications pas encore configurées sur le serveur");
+    window.OneSignalDeferred=window.OneSignalDeferred||[];
+    window.OneSignalDeferred.push(async OneSignal=>{
+      try{
+        if(!oneSignalReady){
+          const swUrl=new URL("sw.js",location.href);
+          const swPath=swUrl.pathname.replace(/^\//,"");
+          const swScope=new URL("./",location.href).pathname;
+          await OneSignal.init({appId:cfg.appId,serviceWorkerPath:swPath,serviceWorkerParam:{scope:swScope}});
+          oneSignalReady=true;
+        }
+        if(askPermission)await OneSignal.Notifications.requestPermission();
+        OneSignal.User.addTags({mission_family:String(profile.familyId),mission_parent:"1"});
+        profile.pushEnabled=true;saveProf();render();
+        if(askPermission)toast("Notifications parents activées 🔔");
+      }catch(e){console.warn("Mission Maison OneSignal",e);if(askPermission)toast("Impossible d'activer les notifications")}
+    });
+  }catch(e){if(askPermission)toast("Notifications : "+e.message)}
+}
+async function notifyTaskFinished(t){
+  if(!profile.token||!t)return;
+  const c=child(t.childId);
+  try{
+    await api("/api/mission/task-finished",{method:"POST",body:JSON.stringify({childName:c?.name||"Un enfant",taskTitle:t.title||"une mission"})});
+  }catch(e){console.warn("Notification mission",e)}
+}
 
 function family(){
-if(profile.token)return `<div class="card"><h2>☁️ Famille synchronisée</h2><div class="notice">Même tâches, points et confirmations sur tous les appareils.</div><div class="code">${esc(profile.joinCode)}</div><div class="small" style="text-align:center">Code à mettre sur les autres appareils</div><p><b>Appareil :</b> ${esc(profile.memberName)}</p><button class="btn big secondary" onclick="pullCloud(true)">🔄 Synchroniser</button><button class="btn big danger" onclick="leave()">Déconnecter cet appareil</button></div>`;
+if(profile.token)return `<div class="card"><h2>☁️ Famille synchronisée</h2><div class="notice">Même tâches, points et confirmations sur tous les appareils.</div><div class="code">${esc(profile.joinCode)}</div><div class="small" style="text-align:center">Code à mettre sur les autres appareils</div><p><b>Appareil :</b> ${esc(profile.memberName)}</p><button class="btn big secondary" onclick="pullCloud(true)">🔄 Synchroniser</button><button class="btn big ${profile.pushEnabled?"success":"primary"}" onclick="initParentPush(true)">${profile.pushEnabled?"🔔 Notifications parents activées ✅":"🔔 Activer les notifications parents"}</button><p class="small">À activer seulement sur les téléphones des parents. Pas besoin sur la tablette des enfants.</p><button class="btn big danger" onclick="leave()">Déconnecter cet appareil</button></div>`;
 return `<div class="card cloud"><h2>☁️ Créer le partage</h2><div class="notice">Le serveur est déjà configuré automatiquement. Tu n’as plus besoin de copier une adresse.</div><input id="memberName" placeholder="Ton nom, ex. Francis"><button class="btn big primary" onclick="createFamily()">🏠 Créer ma famille Mission Maison</button></div>
 <div class="card cloud"><h2>🔗 Rejoindre une famille</h2><div class="notice">Écris seulement le nom de l’appareil et le code famille.</div><input id="joinName" placeholder="Ex. Maman ou Tablette enfants"><input id="joinCode" placeholder="CODE FAMILLE"><button class="btn big success" onclick="joinFamily()">Rejoindre</button><button class="btn big secondary" onclick="testServer()">🧪 Tester le serveur</button></div>`}
 
@@ -283,10 +315,11 @@ if(!child(active))active=data.children[0]?.id;
 document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>
 ${!isStandalone()?`<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>`:""}
 ${view==="kids"?kids():view==="parents"?parents():family()}
-<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.4</div></div>`}
+<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.5</div></div>`}
 
 localStorage.setItem(STORE,JSON.stringify(data));saveProf();render();
 if(profile.token)pullCloud(true);
+if(profile.token&&profile.pushEnabled)setTimeout(()=>initParentPush(false),1200);
 setInterval(()=>{if(profile.token&&document.visibilityState==="visible")pullCloud()},5000);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&profile.token)pullCloud(true)});
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
