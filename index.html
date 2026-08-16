@@ -315,7 +315,7 @@ if(!child(active))active=data.children[0]?.id;
 document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>
 ${!isStandalone()?`<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>`:""}
 ${view==="kids"?kids():view==="parents"?parents():family()}
-<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.6</div></div>`}
+<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.7</div></div>`}
 
 localStorage.setItem(STORE,JSON.stringify(data));saveProf();render();
 if(profile.token)pullCloud(true);
