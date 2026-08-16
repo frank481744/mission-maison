@@ -39,10 +39,22 @@ const day=()=>{let d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFu
 const base={schemaVersion:2,settings:{app:"mission-maison"},parentPin:"1234",
 children:[{id:"c1",name:"Dylan",avatar:"🦸",points:0},{id:"c2",name:"Nolan",avatar:"🦖",points:0},{id:"c3",name:"Enfant 3",avatar:"🦄",points:0},{id:"c4",name:"Enfant 4",avatar:"🐼",points:0},{id:"c5",name:"Enfant 5",avatar:"🐯",points:0},{id:"c6",name:"Enfant 6",avatar:"🦊",points:0}],
 tasks:[{id:"t1",childId:"c1",title:"Ranger sa chambre",emoji:"🛏️",points:20,days:ALL},{id:"t2",childId:"c1",title:"Mettre la table",emoji:"🍽️",points:10,days:ALL},{id:"t3",childId:"c1",title:"Nourrir le chien",emoji:"🐶",points:10,days:ALL},{id:"t4",childId:"c2",title:"Ramasser les jouets",emoji:"🧸",points:15,days:ALL}],
-taskStates:{},rewards:[{id:"r1",title:"Choisir le film",emoji:"🎬",cost:80},{id:"r2",title:"Dessert spécial",emoji:"🍦",cost:120},{id:"r3",title:"30 min de jeu en plus",emoji:"🎮",cost:150}],rewardRequests:[],updatedAt:now()};
+taskStates:{},taskNotes:{},
+habits:[{id:"h1",childId:"all",title:"Rincer ton assiette et la mettre au lave-vaisselle",emoji:"🍽️",days:ALL}],
+habitStates:{},pointAdjustments:[],
+rewards:[{id:"r1",title:"Choisir le film",emoji:"🎬",cost:80},{id:"r2",title:"Dessert spécial",emoji:"🍦",cost:120},{id:"r3",title:"30 min de jeu en plus",emoji:"🎮",cost:150}],rewardRequests:[],updatedAt:now()};
 
-function migrate(x){if(x?.schemaVersion===2)return x;let n=clone(base);if(x?.children)n.children=x.children.map(c=>({...c,points:0}));if(x?.tasks)n.tasks=x.tasks.map(t=>({id:t.id||uid("t"),childId:t.childId,title:t.title,emoji:t.emoji||"🧹",points:Number(t.points||0),days:[...ALL]}));if(x?.rewards)n.rewards=x.rewards;return n}
-function load(){try{let x=localStorage.getItem(STORE);if(x)return migrate(JSON.parse(x));x=localStorage.getItem(OLD);if(x)return migrate(JSON.parse(x))}catch{}return clone(base)}
+function normalize(x){
+  if(!x||typeof x!=="object")x=clone(base);
+  x.taskNotes=x.taskNotes||{};
+  if(!Array.isArray(x.habits))x.habits=clone(base.habits);
+  x.habitStates=x.habitStates||{};
+  if(!Array.isArray(x.pointAdjustments))x.pointAdjustments=[];
+  if(!Array.isArray(x.rewardRequests))x.rewardRequests=[];
+  return x;
+}
+function migrate(x){if(x?.schemaVersion===2)return normalize(x);let n=clone(base);if(x?.children)n.children=x.children.map(c=>({...c,points:0}));if(x?.tasks)n.tasks=x.tasks.map(t=>({id:t.id||uid("t"),childId:t.childId,title:t.title,emoji:t.emoji||"🧹",points:Number(t.points||0),days:[...ALL]}));if(x?.rewards)n.rewards=x.rewards;return normalize(n)}
+function load(){try{let x=localStorage.getItem(STORE);if(x)return normalize(migrate(JSON.parse(x)));x=localStorage.getItem(OLD);if(x)return normalize(migrate(JSON.parse(x)))}catch{}return normalize(clone(base))}
 function loadProf(){try{return JSON.parse(localStorage.getItem(PROF))||{apiUrl:API_DEFAULT,token:"",memberName:"",joinCode:"",cloudVersion:0}}catch{return{apiUrl:API_DEFAULT,token:"",memberName:"",joinCode:"",cloudVersion:0}}}
 let data=load(),profile=loadProf(),view="kids",unlocked=false,active=localStorage.getItem(ACTIVE)||data.children[0].id,busy=false,dirty=false,timer=null,installPrompt=null;
 if(!profile.apiUrl)profile.apiUrl=API_DEFAULT;
@@ -54,7 +66,13 @@ function saveProf(){localStorage.setItem(PROF,JSON.stringify(profile))}
 function child(id){return data.children.find(x=>x.id===id)}
 function st(id,date=day()){return data.taskStates?.[date]?.[id]||"todo"}
 function setst(id,s,date=day()){data.taskStates[date]=data.taskStates[date]||{};data.taskStates[date][id]=s}
+function taskNote(id,date=day()){return data.taskNotes?.[date]?.[id]||""}
+function setTaskNote(id,msg,date=day()){data.taskNotes[date]=data.taskNotes[date]||{};if(msg)data.taskNotes[date][id]=msg;else delete data.taskNotes[date][id]}
 function tasksFor(cid,date=day()){let wd=new Date(date+"T12:00:00").getDay();return data.tasks.filter(t=>t.childId===cid&&(t.days||ALL).includes(wd))}
+function habitsFor(cid,date=day()){let wd=new Date(date+"T12:00:00").getDay();return data.habits.filter(h=>(h.childId==="all"||h.childId===cid)&&(h.days||ALL).includes(wd))}
+function habitKey(cid,hid){return `${hid}:${cid}`}
+function habitDone(cid,hid,date=day()){return !!data.habitStates?.[date]?.[habitKey(cid,hid)]}
+function setHabitDone(cid,hid,val,date=day()){data.habitStates[date]=data.habitStates[date]||{};data.habitStates[date][habitKey(cid,hid)]=!!val}
 function pendingPts(cid){return tasksFor(cid).filter(t=>st(t.id)==="pending").reduce((a,t)=>a+Number(t.points||0),0)}
 function completed(cid){return tasksFor(cid).filter(t=>["pending","done"].includes(st(t.id))).length}
 function pct(cid){let t=tasksFor(cid);return t.length?Math.round(completed(cid)/t.length*100):0}
@@ -62,24 +80,38 @@ function dlabel(d){d=d||ALL;if(d.length===7)return"Tous les jours";if(JSON.strin
 function choose(id){active=id;localStorage.setItem(ACTIVE,id);render()}
 function tabs(){return `<div class="tabs"><button class="tab ${view==="kids"?"on":""}" onclick="view='kids';render()">🎮 Enfants</button><button class="tab ${view==="parents"?"on":""}" onclick="view='parents';render()">🔒 Parents</button><button class="tab ${view==="family"?"on":""}" onclick="view='family';render()">☁️ Famille</button></div>`}
 
-function speakTask(id){
-  const t=data.tasks.find(x=>x.id===id);
-  if(!t)return;
+function speakText(txt){
   if(!("speechSynthesis" in window))return toast("La lecture vocale n'est pas disponible sur cet appareil.");
   window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(t.title);
-  u.lang="fr-CA";
-  u.rate=0.9;
-  u.pitch=1;
+  const u=new SpeechSynthesisUtterance(txt);
+  u.lang="fr-CA";u.rate=0.9;u.pitch=1;
   const voices=window.speechSynthesis.getVoices();
-  const fr=voices.find(v=>/^fr(-|_)/i.test(v.lang)) || voices.find(v=>/French|Français/i.test(v.name));
+  const fr=voices.find(v=>/^fr(-|_)/i.test(v.lang))||voices.find(v=>/French|Français/i.test(v.name));
   if(fr)u.voice=fr;
   window.speechSynthesis.speak(u);
 }
-function kidTask(t){let s=st(t.id),txt=s==="todo"?"À faire":s==="pending"?"En attente du parent":s==="done"?"Confirmée ✅":"À refaire";return `<div class="task"><div class="emoji">${t.emoji}</div><div class="grow"><div class="title">${esc(t.title)}</div><div class="small">⭐ ${t.points} points</div><span class="status ${s}">${txt}</span><div class="actions"><button class="btn primary" onclick="speakTask('${t.id}')">🔊 Lire la tâche</button>${["todo","redo"].includes(s)?`<button class="btn success" onclick="finish('${t.id}')">✅ J'ai terminé!</button>`:""}</div></div></div>`}
+function speakTask(id){
+  const t=data.tasks.find(x=>x.id===id);if(!t)return;
+  const n=taskNote(id);
+  speakText(n&&st(id)==="redo"?`${t.title}. À corriger : ${n}`:t.title);
+}
+function speakHabit(id){
+  const h=data.habits.find(x=>x.id===id);if(h)speakText(h.title);
+}
+function kidTask(t){
+  let s=st(t.id),txt=s==="todo"?"À faire":s==="pending"?"En attente du parent":s==="done"?"Confirmée ✅":"À refaire";
+  const note=taskNote(t.id);
+  const noteBox=s==="redo"&&note?`<div class="notice" style="margin-top:8px"><b>👀 À corriger :</b> ${esc(note)}</div>`:"";
+  return `<div class="task"><div class="emoji">${t.emoji}</div><div class="grow"><div class="title">${esc(t.title)}</div><div class="small">⭐ ${t.points} points</div><span class="status ${s}">${txt}</span>${noteBox}<div class="actions"><button class="btn primary" onclick="speakTask('${t.id}')">🔊 Lire la tâche</button>${["todo","redo"].includes(s)?`<button class="btn success" onclick="finish('${t.id}')">✅ J'ai terminé!</button>`:""}</div></div></div>`
+}
+function kidHabit(c,h){
+  const done=habitDone(c.id,h.id);
+  return `<div class="task"><div class="emoji">${h.emoji}</div><div class="grow"><div class="title">${esc(h.title)}</div><div class="small">Habitude quotidienne · aucun point</div><span class="status ${done?"done":"todo"}">${done?"Fait ✅":"À faire"}</span><div class="actions"><button class="btn primary" onclick="speakHabit('${h.id}')">🔊 Lire</button>${done?`<button class="btn secondary" onclick="toggleHabit('${c.id}','${h.id}')">↩️ Annuler</button>`:`<button class="btn success" onclick="toggleHabit('${c.id}','${h.id}')">✅ Fait</button>`}</div></div></div>`;
+}
 function rewardCard(c,r){let q=data.rewardRequests.find(x=>x.childId===c.id&&x.rewardId===r.id&&x.status==="pending");return `<div class="reward"><div class="emoji">${r.emoji}</div><div class="grow"><b>${esc(r.title)}</b><div class="small">⭐ ${r.cost}</div></div>${q?`<span class="status pending">Demandée</span>`:`<button class="btn secondary" onclick="askReward('${c.id}','${r.id}')" ${c.points<r.cost?"disabled":""}>Je la veux</button>`}</div>`}
-function kids(){let c=child(active)||data.children[0];return `<div class="grid">${data.children.map(x=>`<button class="card child" onclick="choose('${x.id}')"><div class="avatar">${x.avatar}</div><div class="name">${esc(x.name)}</div><div class="pts">⭐ ${x.points}</div><div class="wait">+ ${pendingPts(x.id)} en attente</div><div class="progress"><i style="width:${pct(x.id)}%"></i></div><div class="small">${completed(x.id)}/${tasksFor(x.id).length} missions aujourd'hui</div></button>`).join("")}</div><div class="card"><div class="stat"><h2>${c.avatar} ${esc(c.name)}</h2><span class="pill">⭐ ${c.points}</span></div><div class="notice">Tu peux continuer toutes tes missions sans attendre. Les points arrivent seulement après confirmation. 👍</div>${tasksFor(c.id).map(kidTask).join("")||`<p class="small">Aucune mission aujourd'hui 🎉</p>`}</div><div class="card"><h2>🎁 Récompenses</h2>${data.rewards.map(r=>rewardCard(c,r)).join("")}</div>`}
-function finish(id){if(["pending","done"].includes(st(id)))return;setst(id,"pending");save();confetti()}
+function kids(){let c=child(active)||data.children[0];return `<div class="grid">${data.children.map(x=>`<button class="card child" onclick="choose('${x.id}')"><div class="avatar">${x.avatar}</div><div class="name">${esc(x.name)}</div><div class="pts">⭐ ${x.points}</div><div class="wait">+ ${pendingPts(x.id)} en attente</div><div class="progress"><i style="width:${pct(x.id)}%"></i></div><div class="small">${completed(x.id)}/${tasksFor(x.id).length} missions aujourd'hui</div></button>`).join("")}</div><div class="card"><div class="stat"><h2>${c.avatar} ${esc(c.name)}</h2><span class="pill">⭐ ${c.points}</span></div><div class="notice">Tu peux continuer toutes tes missions sans attendre. Les points arrivent seulement après confirmation. 👍</div>${tasksFor(c.id).map(kidTask).join("")||`<p class="small">Aucune mission aujourd'hui 🎉</p>`}</div><div class="card"><h2>🧼 Petites habitudes</h2><div class="notice">Les gestes normaux de la maison. Pas de points : on les fait simplement chaque jour. 💪</div>${habitsFor(c.id).map(h=>kidHabit(c,h)).join("")||`<p class="small">Aucune petite habitude aujourd'hui.</p>`}</div><div class="card"><h2>🎁 Récompenses</h2>${data.rewards.map(r=>rewardCard(c,r)).join("")}</div>`}
+function finish(id){if(["pending","done"].includes(st(id)))return;setTaskNote(id,"");setst(id,"pending");save();confetti()}
+function toggleHabit(cid,hid){setHabitDone(cid,hid,!habitDone(cid,hid));save()}
 function askReward(cid,rid){let c=child(cid),r=data.rewards.find(x=>x.id===rid);if(!c||!r||c.points<r.cost)return;data.rewardRequests.push({id:uid("q"),childId:cid,rewardId:rid,status:"pending",createdAt:now()});save();toast("Demande envoyée 🎁")}
 
 function pendings(){let a=[];Object.entries(data.taskStates||{}).forEach(([date,o])=>Object.entries(o).forEach(([id,s])=>{let t=data.tasks.find(x=>x.id===id);if(s==="pending"&&t)a.push({date,t})}));return a.sort((a,b)=>b.date.localeCompare(a.date))}
@@ -90,6 +122,17 @@ function parentManageTask(t){
   const undo=s!=="todo"?`<button class="btn secondary" onclick="undoToday('${t.id}')">↩️ Annuler aujourd'hui</button>`:"";
   return `<div class="reward"><div class="emoji">${t.emoji}</div><div class="grow"><b>${esc(child(t.childId)?.name)} — ${esc(t.title)}</b><div class="small">⭐ ${t.points} · ${dlabel(t.days)} · Aujourd'hui : ${label}</div></div><div class="actions">${undo}<button class="btn secondary" onclick="editTask('${t.id}')">✏️</button><button class="btn danger" onclick="delTask('${t.id}')">🗑️</button></div></div>`;
 }
+function habitWho(h){return h.childId==="all"?"Tous les enfants":(child(h.childId)?.name||"Enfant")}
+function parentManageHabit(h){
+  return `<div class="reward"><div class="emoji">${h.emoji}</div><div class="grow"><b>${esc(h.title)}</b><div class="small">${esc(habitWho(h))} · ${dlabel(h.days)} · aucun point</div></div><div class="actions"><button class="btn secondary" onclick="editHabit('${h.id}')">✏️</button><button class="btn danger" onclick="delHabit('${h.id}')">🗑️</button></div></div>`;
+}
+function activePenalties(){
+  return (data.pointAdjustments||[]).filter(x=>x.type==="penalty"&&!x.undoneAt).slice().reverse().slice(0,10);
+}
+function penaltyRow(x){
+  const c=child(x.childId), when=new Date(x.createdAt).toLocaleDateString("fr-CA");
+  return `<div class="reward"><div class="emoji">⚠️</div><div class="grow"><b>${esc(c?.name||"Enfant")} · ${x.amount} point(s)</b><div class="small">${esc(x.reason||"Sans raison")} · ${when}</div></div><button class="btn secondary" onclick="undoPenalty('${x.id}')">↩️ Annuler</button></div>`;
+}
 
 function parents(){
 if(!unlocked)return `<div class="card"><h2>🔒 Mode Parents</h2><div class="form"><input id="pin" inputmode="numeric" placeholder="NIP parent"><button class="btn primary" onclick="unlock()">Déverrouiller</button></div><p class="small">NIP de départ : 1234</p></div>`;
@@ -98,13 +141,22 @@ return `<div class="card"><div class="stat"><h2>⏳ À confirmer</h2><span class
 <div class="card"><h2>🎁 Demandes</h2>${rq.map(rewardReq).join("")||`<p class="small">Aucune demande.</p>`}</div>
 <div class="card"><h2>➕ Ajouter une mission</h2><div class="form"><select id="newChild">${data.children.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select><input id="newTitle" placeholder="Ex. Faire son lit"><input id="newEmoji" value="🧹"><input id="newPts" type="number" value="10"><select id="newDays"><option value="all">Tous les jours</option><option value="week">Lun–Ven</option><option value="wknd">Sam–Dim</option></select></div><button class="btn big primary" onclick="addTask()">Ajouter</button></div>
 <div class="card"><h2>🧹 Gérer les missions</h2>${data.tasks.map(parentManageTask).join("")}</div>
+<div class="card"><h2>🧼 Petites habitudes</h2><div class="notice">Ces gestes ne donnent aucun point et recommencent chaque jour.</div><div class="form"><select id="habitChild"><option value="all">Tous les enfants</option>${data.children.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select><input id="habitTitle" placeholder="Ex. Ranger ses souliers"><input id="habitEmoji" value="🧼"><select id="habitDays"><option value="all">Tous les jours</option><option value="week">Lun–Ven</option><option value="wknd">Sam–Dim</option></select></div><button class="btn big primary" onclick="addHabit()">Ajouter l'habitude</button>${data.habits.map(parentManageHabit).join("")}</div>
+<div class="card"><h2>⚠️ Mauvais comportement</h2><div class="notice">Retirer des points avec une raison. Les points ne descendent jamais sous 0 et tu peux annuler une erreur.</div><div class="form"><select id="penaltyChild">${data.children.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select><input id="penaltyPoints" type="number" min="1" value="5" placeholder="Points"><input id="penaltyReason" placeholder="Raison, ex. manque de respect"></div><button class="btn big danger" onclick="addPenalty()">⚠️ Retirer les points</button>${activePenalties().map(penaltyRow).join("")||`<p class="small">Aucun retrait de points actif.</p>`}</div>
 <div class="card"><h2>🎁 Gérer les récompenses</h2><div class="form"><input id="rTitle" placeholder="Ex. Choisir le film"><input id="rEmoji" value="🎁"><input id="rCost" type="number" value="50"></div><button class="btn big primary" onclick="addReward()">Ajouter</button>${data.rewards.map(r=>`<div class="reward"><div class="emoji">${r.emoji}</div><div class="grow"><b>${esc(r.title)}</b><div class="small">⭐ ${r.cost}</div></div><div class="actions"><button class="btn secondary" onclick="editReward('${r.id}')">✏️</button><button class="btn danger" onclick="delReward('${r.id}')">🗑️</button></div></div>`).join("")}</div>
 <div class="card"><h2>👧👦 Enfants</h2>${data.children.map(c=>`<div class="reward"><div class="emoji">${c.avatar}</div><div class="grow"><b>${esc(c.name)}</b><div class="small">⭐ ${c.points}</div></div><button class="btn secondary" onclick="editChild('${c.id}')">Modifier</button></div>`).join("")}</div>
 <div class="card"><h2>⚙️ Parents</h2><button class="btn big secondary" onclick="changePin()">Changer le NIP</button></div>`}
 
 function unlock(){if(document.querySelector("#pin").value===data.parentPin){unlocked=true;render()}else toast("NIP incorrect")}
-function approve(id,date){let t=data.tasks.find(x=>x.id===id);if(!t||st(id,date)!=="pending")return;let c=child(t.childId);c.points+=Number(t.points||0);setst(id,"done",date);save();confetti()}
-function redo(id,date){if(st(id,date)==="pending"){setst(id,"redo",date);save()}}
+function approve(id,date){let t=data.tasks.find(x=>x.id===id);if(!t||st(id,date)!=="pending")return;let c=child(t.childId);c.points+=Number(t.points||0);setTaskNote(id,"",date);setst(id,"done",date);save();confetti()}
+function redo(id,date){
+  if(st(id,date)!=="pending")return;
+  const t=data.tasks.find(x=>x.id===id);
+  const why=prompt(`Qu'est-ce qui n'est pas correct dans "${t?.title||"la tâche"}" ?\nL'enfant va voir et entendre ce message.`,"");
+  if(why===null)return;
+  setTaskNote(id,why.trim()||"À vérifier et corriger.",date);
+  setst(id,"redo",date);save();
+}
 function undoToday(id){
   const t=data.tasks.find(x=>x.id===id);if(!t)return;
   const s=st(id,day());if(s==="todo")return toast("Cette mission est déjà à faire");
@@ -114,7 +166,7 @@ function undoToday(id){
     :`Remettre la mission "${t.title}" à faire aujourd'hui?`;
   if(!confirm(msg))return;
   if(s==="done"&&c)c.points=Math.max(0,Number(c.points||0)-Number(t.points||0));
-  setst(id,"todo",day());save();
+  setTaskNote(id,"",day());setst(id,"todo",day());save();
   toast(s==="done"?`Mission annulée · ${t.points} point(s) retiré(s)`:"Mission remise à faire ✅");
 }
 function giveReward(id){let q=data.rewardRequests.find(x=>x.id===id),c=child(q?.childId),r=data.rewards.find(x=>x.id===q?.rewardId);if(c&&r&&c.points>=r.cost){c.points-=r.cost;q.status="approved";save();confetti()}else toast("Pas assez de points")}
@@ -122,6 +174,39 @@ function denyReward(id){let q=data.rewardRequests.find(x=>x.id===id);if(q){q.sta
 function addTask(){let title=document.querySelector("#newTitle").value.trim();if(!title)return toast("Écris la mission");let v=document.querySelector("#newDays").value,days=v==="week"?WEEK:v==="wknd"?WKND:ALL;data.tasks.push({id:uid("t"),childId:document.querySelector("#newChild").value,title,emoji:document.querySelector("#newEmoji").value||"🧹",points:Number(document.querySelector("#newPts").value||0),days:[...days]});save()}
 function editTask(id){let t=data.tasks.find(x=>x.id===id);if(!t)return;let n=prompt("Nom :",t.title);if(n===null)return;let p=prompt("Points :",t.points);if(p===null)return;let f=prompt("1=tous les jours, 2=lun-ven, 3=sam-dim","1");if(f===null)return;t.title=n||t.title;t.points=Math.max(0,Number(p)||0);t.days=f==="2"?[...WEEK]:f==="3"?[...WKND]:[...ALL];save()}
 function delTask(id){if(confirm("Supprimer cette mission?")){data.tasks=data.tasks.filter(x=>x.id!==id);save()}}
+function addHabit(){
+  const title=document.querySelector("#habitTitle").value.trim();if(!title)return toast("Écris l'habitude");
+  const v=document.querySelector("#habitDays").value,days=v==="week"?WEEK:v==="wknd"?WKND:ALL;
+  data.habits.push({id:uid("h"),childId:document.querySelector("#habitChild").value,title,emoji:document.querySelector("#habitEmoji").value||"🧼",days:[...days]});save();
+}
+function editHabit(id){
+  const h=data.habits.find(x=>x.id===id);if(!h)return;
+  const n=prompt("Habitude :",h.title);if(n===null)return;
+  const who=prompt("Pour qui ? Écris ALL pour tous, sinon le nom exact de l'enfant.",h.childId==="all"?"ALL":(child(h.childId)?.name||"ALL"));if(who===null)return;
+  const f=prompt("1=tous les jours, 2=lun-ven, 3=sam-dim","1");if(f===null)return;
+  h.title=n||h.title;
+  if(String(who).trim().toUpperCase()==="ALL")h.childId="all";else{const c=data.children.find(c=>c.name.toLowerCase()===String(who).trim().toLowerCase());if(c)h.childId=c.id}
+  h.days=f==="2"?[...WEEK]:f==="3"?[...WKND]:[...ALL];save();
+}
+function delHabit(id){if(confirm("Supprimer cette petite habitude?")){data.habits=data.habits.filter(x=>x.id!==id);save()}}
+function addPenalty(){
+  const c=child(document.querySelector("#penaltyChild").value);
+  const requested=Math.max(1,Number(document.querySelector("#penaltyPoints").value||0));
+  const reason=document.querySelector("#penaltyReason").value.trim();
+  if(!c)return;
+  if(!reason)return toast("Écris la raison");
+  const actual=Math.min(Number(c.points||0),requested);
+  if(actual<=0)return toast(`${c.name} n'a aucun point à retirer`);
+  if(!confirm(`Retirer ${actual} point(s) à ${c.name} ?\nRaison : ${reason}`))return;
+  c.points-=actual;
+  data.pointAdjustments.push({id:uid("adj"),type:"penalty",childId:c.id,amount:-actual,reason,createdAt:now()});
+  save();toast(`${actual} point(s) retiré(s) à ${c.name}`);
+}
+function undoPenalty(id){
+  const x=data.pointAdjustments.find(a=>a.id===id);if(!x||x.undoneAt)return;
+  const c=child(x.childId);if(c)c.points+=Math.abs(Number(x.amount||0));
+  x.undoneAt=now();save();toast("Retrait de points annulé ✅");
+}
 function addReward(){let title=document.querySelector("#rTitle").value.trim();if(!title)return toast("Écris la récompense");data.rewards.push({id:uid("r"),title,emoji:document.querySelector("#rEmoji").value||"🎁",cost:Math.max(0,Number(document.querySelector("#rCost").value||0))});save()}
 function editReward(id){let r=data.rewards.find(x=>x.id===id);if(!r)return;let n=prompt("Récompense :",r.title);if(n===null)return;let c=prompt("Coût en points :",r.cost);if(c===null)return;r.title=n||r.title;r.cost=Math.max(0,Number(c)||0);save()}
 function delReward(id){if(confirm("Supprimer cette récompense?")){data.rewards=data.rewards.filter(x=>x.id!==id);save()}}
@@ -177,8 +262,8 @@ async function joinFamily(){
   if(!code)return toast("Entre le code famille");
   try{let j=await api("/api/family/join",{method:"POST",body:JSON.stringify({joinCode:code,memberName:profile.memberName})});Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:0,apiUrl:API_DEFAULT});saveProf();dirty=false;await pullCloud(true);view="kids";render();toast("Famille rejointe ✅")}catch(e){toast("Impossible : "+e.message)}
 }
-async function pushCloud(){if(!profile.token||busy)return;busy=true;try{let j=await api("/api/state",{method:"PUT",body:JSON.stringify({version:Number(profile.cloudVersion||0),data})});profile.cloudVersion=Number(j.version||0);saveProf();dirty=false;render()}catch(e){if(e.status===409&&e.data?.data){data=e.data.data;profile.cloudVersion=Number(e.data.version||0);saveProf();dirty=false;localStorage.setItem(STORE,JSON.stringify(data));render();toast("Une autre modification est arrivée — réessaie")}else toast("Sync à vérifier")}finally{busy=false}}
-async function pullCloud(force=false){if(!profile.token||busy||(dirty&&!force))return;busy=true;try{let j=await api("/api/state");if(j.data?.schemaVersion===2){data=j.data;profile.cloudVersion=Number(j.version||0);saveProf();localStorage.setItem(STORE,JSON.stringify(data));render()}}catch(e){if(force)toast("Sync impossible : "+e.message)}finally{busy=false}}
+async function pushCloud(){if(!profile.token||busy)return;busy=true;try{let j=await api("/api/state",{method:"PUT",body:JSON.stringify({version:Number(profile.cloudVersion||0),data})});profile.cloudVersion=Number(j.version||0);saveProf();dirty=false;render()}catch(e){if(e.status===409&&e.data?.data){data=normalize(e.data.data);profile.cloudVersion=Number(e.data.version||0);saveProf();dirty=false;localStorage.setItem(STORE,JSON.stringify(data));render();toast("Une autre modification est arrivée — réessaie")}else toast("Sync à vérifier")}finally{busy=false}}
+async function pullCloud(force=false){if(!profile.token||busy||(dirty&&!force))return;busy=true;try{let j=await api("/api/state");if(j.data?.schemaVersion===2){data=normalize(j.data);profile.cloudVersion=Number(j.version||0);saveProf();localStorage.setItem(STORE,JSON.stringify(data));render()}}catch(e){if(force)toast("Sync impossible : "+e.message)}finally{busy=false}}
 function leave(){if(confirm("Déconnecter cet appareil?")){profile={apiUrl:API_DEFAULT,token:"",memberName:"",joinCode:"",cloudVersion:0};saveProf();render()}}
 
 function family(){
@@ -198,7 +283,7 @@ if(!child(active))active=data.children[0]?.id;
 document.querySelector("#app").innerHTML=`<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Les corvées deviennent des missions!</div><div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div></div>${tabs()}</div>
 ${!isStandalone()?`<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>`:""}
 ${view==="kids"?kids():view==="parents"?parents():family()}
-<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.3</div></div>`}
+<div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.4</div></div>`}
 
 localStorage.setItem(STORE,JSON.stringify(data));saveProf();render();
 if(profile.token)pullCloud(true);
