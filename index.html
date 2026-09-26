@@ -10,1158 +10,371 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mission Maison">
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <style>
-:root{--bg:#0f172a;--card:#111827;--line:#334155;--text:#f8fafc;--muted:#cbd5e1;--yellow:#fbbf24;--green:#22c55e;--red:#ef4444;--blue:#38bdf8}
+:root{--card:#111827;--line:#334155;--text:#f8fafc;--muted:#cbd5e1;--yellow:#fbbf24;--green:#22c55e;--red:#ef4444;--blue:#38bdf8;--orange:#fb923c}
 *{box-sizing:border-box}
 body{margin:0;background:linear-gradient(#0f172a,#0b1220);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
-button,input,select{font:inherit}
-.wrap{max-width:980px;margin:auto;padding:16px 14px 40px}
-.top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.brand{font-size:27px;font-weight:950}
-.sub,.small{color:var(--muted);font-size:13px}
-.sync{font-size:12px;color:#bae6fd;margin-top:3px}
-.tabs{display:flex;gap:7px;flex-wrap:wrap}
-.tab{border:1px solid var(--line);background:#172033;color:white;border-radius:999px;padding:10px 13px;font-weight:900}
-.tab.on{background:var(--yellow);color:#111827}
-.card{background:rgba(17,24,39,.96);border:1px solid var(--line);border-radius:20px;padding:15px;margin:12px 0}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-.child{width:100%;text-align:left;color:white}
-.avatar{font-size:43px}
-.name{font-size:20px;font-weight:950}
-.pts{color:var(--yellow);font-weight:950}
-.wait{color:var(--blue);font-weight:800;font-size:13px}
-.progress{height:10px;background:#263244;border-radius:99px;overflow:hidden;margin:8px 0}
-.progress i{display:block;height:100%;background:#22c55e}
-.task,.reward{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);background:#121a2a;border-radius:16px;padding:12px;margin:9px 0}
-.emoji{font-size:29px}
-.grow{flex:1;min-width:0}
-.title{font-size:17px;font-weight:950}
-.status{display:inline-block;border-radius:99px;padding:5px 8px;font-size:11px;font-weight:900;margin-top:6px}
-.todo{background:#273244}
-.pending{background:#0c4a6e;color:#bae6fd}
-.done{background:#14532d;color:#bbf7d0}
-.redo{background:#7f1d1d;color:#fecaca}
-.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
-button{cursor:pointer}
-button:disabled{opacity:.42;cursor:not-allowed}
-.btn{border:0;border-radius:12px;padding:9px 11px;font-weight:900}
-.big{width:100%;padding:13px;margin-top:9px}
-.primary{background:var(--yellow);color:#111827}
-.success{background:var(--green);color:#052e16}
-.danger{background:var(--red);color:white}
-.secondary{background:#263244;color:white;border:1px solid #475569}
-.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}
-.form input,.form select,.cloud input{width:100%;background:#0b1322;color:white;border:1px solid var(--line);border-radius:11px;padding:10px}
-.cloud input{margin:5px 0}
-.notice{border:1px dashed #475569;background:#0b1322;border-radius:14px;padding:11px;color:#cbd5e1}
-.code{text-align:center;color:var(--yellow);font-size:30px;font-weight:950;letter-spacing:4px;padding:10px}
-.pill{background:#263244;border-radius:99px;padding:5px 8px;font-size:12px;font-weight:900}
-.stat{display:flex;justify-content:space-between;gap:8px;align-items:center}
-.moneyTag{display:inline-block;margin-top:6px;padding:5px 8px;border-radius:99px;background:#3f2d08;color:#fde68a;font-size:11px;font-weight:900}
-h2,h3{margin:5px 0 11px}
-.toast{position:fixed;left:50%;bottom:25px;transform:translateX(-50%);background:#020617;border:1px solid #475569;border-radius:13px;padding:11px 15px;font-weight:850;z-index:9999;max-width:90vw;text-align:center}
-.hidden{display:none}
-.installBox{margin:12px 0}
-.footer{text-align:center;color:#94a3b8;font-size:11px;margin-top:20px}
-@media(max-width:600px){.brand{font-size:23px}.stat{align-items:flex-start}}
+button,input,select{font:inherit}.wrap{max-width:980px;margin:auto;padding:16px 14px 42px}
+.top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.brand{font-size:27px;font-weight:950}.sub,.small{color:var(--muted);font-size:13px}.sync{font-size:12px;color:#bae6fd;margin-top:3px}
+.tabs{display:flex;gap:7px;flex-wrap:wrap}.tab{border:1px solid var(--line);background:#172033;color:white;border-radius:999px;padding:10px 13px;font-weight:900}.tab.on{background:var(--yellow);color:#111827}
+.card{background:rgba(17,24,39,.96);border:1px solid var(--line);border-radius:20px;padding:15px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.child{width:100%;text-align:left;color:white;position:relative}.child.on{border-color:var(--yellow);box-shadow:0 0 0 1px var(--yellow) inset}.avatar{font-size:40px}.name{font-size:19px;font-weight:950}.summary{font-size:12px;color:#cbd5e1;margin-top:4px}
+.scorePos{color:#86efac;font-weight:900}.scoreNeg{color:#fca5a5;font-weight:900}.timerBadge{position:absolute;right:10px;top:10px;background:#7f1d1d;color:#fecaca;border-radius:99px;padding:5px 8px;font-size:11px;font-weight:950}
+.event,.instruction,.timerBox{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);background:#121a2a;border-radius:16px;padding:12px;margin:9px 0}.emoji{font-size:27px}.grow{flex:1;min-width:0}.title{font-size:16px;font-weight:950}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.btn{border:0;border-radius:12px;padding:9px 11px;font-weight:900;cursor:pointer}.btn:disabled{opacity:.4;cursor:not-allowed}.big{width:100%;padding:13px;margin-top:9px}
+.primary{background:var(--yellow);color:#111827}.success{background:var(--green);color:#052e16}.danger{background:var(--red);color:white}.secondary{background:#263244;color:white;border:1px solid #475569}.orange{background:var(--orange);color:#431407}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.form input,.form select,.cloud input{width:100%;background:#0b1322;color:white;border:1px solid var(--line);border-radius:11px;padding:10px}.cloud input{margin:5px 0}
+.quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.quick .btn{min-height:52px;text-align:left}
+.notice{border:1px dashed #475569;background:#0b1322;border-radius:14px;padding:11px;color:#cbd5e1}.pill{background:#263244;border-radius:99px;padding:5px 8px;font-size:12px;font-weight:900}.stat{display:flex;justify-content:space-between;gap:8px;align-items:center}.code{text-align:center;color:var(--yellow);font-size:30px;font-weight:950;letter-spacing:4px;padding:10px}
+.verdict{font-size:20px;font-weight:950;padding:12px;border-radius:14px;background:#0b1322;border:1px solid #334155;margin:10px 0}
+.status{display:inline-block;border-radius:99px;padding:5px 8px;font-size:11px;font-weight:900;margin-top:6px}.pending{background:#0c4a6e;color:#bae6fd}.done{background:#14532d;color:#bbf7d0}.bad{background:#7f1d1d;color:#fecaca}.neutral{background:#334155;color:#e2e8f0}
+.timerClock{font-size:31px;font-weight:950;color:#fca5a5;letter-spacing:1px}.row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+h2,h3{margin:5px 0 11px}.toast{position:fixed;left:50%;bottom:25px;transform:translateX(-50%);background:#020617;border:1px solid #475569;border-radius:13px;padding:11px 15px;font-weight:850;z-index:9999;max-width:90vw;text-align:center}.hidden{display:none}.installBox{margin:12px 0}.footer{text-align:center;color:#94a3b8;font-size:11px;margin-top:20px}
+@media(max-width:600px){.brand{font-size:23px}.quick{grid-template-columns:1fr}.stat{align-items:flex-start}.timerClock{font-size:27px}}
 </style>
 </head>
 <body>
 <div id="app"></div><div id="toast" class="toast hidden"></div>
-
 <script>
 const STORE="missionMaisonV2",OLD="mission-maison-v1",PROF="missionMaisonCloudV1",ACTIVE="missionMaisonActive";
 const API_DEFAULT="https://budget-pack-api.2ywtpfbvpb.workers.dev";
-const ONESIGNAL_APP_ID="4770a678-6329-4944-9d54-b01d0b14fc97";
-const ALL=[0,1,2,3,4,5,6],WEEK=[1,2,3,4,5],WKND=[0,6],clone=o=>JSON.parse(JSON.stringify(o));
+const clone=o=>JSON.parse(JSON.stringify(o));
 const uid=p=>p+"_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,7);
 const now=()=>new Date().toISOString();
-const day=()=>{let d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`};
+const pad=n=>String(n).padStart(2,"0");
+const day=(d=new Date())=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const fromDay=s=>new Date(s+"T12:00:00");
+const addDays=(s,n)=>{const d=fromDay(s);d.setDate(d.getDate()+n);return day(d)};
 
 const base={
-  schemaVersion:2,
-  settings:{app:"mission-maison",cashRewardSeeded:true},
-  parentPin:"1234",
-  children:[
-    {id:"c1",name:"Dylan",avatar:"🦸",points:0},
-    {id:"c2",name:"Nolan",avatar:"🦖",points:0},
-    {id:"c3",name:"Enfant 3",avatar:"🦄",points:0},
-    {id:"c4",name:"Enfant 4",avatar:"🐼",points:0},
-    {id:"c5",name:"Enfant 5",avatar:"🐯",points:0},
-    {id:"c6",name:"Enfant 6",avatar:"🦊",points:0}
-  ],
-  tasks:[
-    {id:"t1",childId:"c1",title:"Ranger sa chambre",emoji:"🛏️",points:20,days:ALL},
-    {id:"t2",childId:"c1",title:"Mettre la table",emoji:"🍽️",points:10,days:ALL},
-    {id:"t3",childId:"c1",title:"Nourrir le chien",emoji:"🐶",points:10,days:ALL},
-    {id:"t4",childId:"c2",title:"Ramasser les jouets",emoji:"🧸",points:15,days:ALL}
-  ],
-  taskStates:{},
-  taskNotes:{},
-  habits:[{id:"h1",childId:"all",title:"Rincer ton assiette et la mettre au lave-vaisselle",emoji:"🍽️",days:ALL}],
-  habitStates:{},
-  pointAdjustments:[],
-  rewards:[
-    {id:"r1",title:"Choisir le film",emoji:"🎬",cost:80,monthlyLimit:false},
-    {id:"r2",title:"Dessert spécial",emoji:"🍦",cost:120,monthlyLimit:false},
-    {id:"r3",title:"30 min de jeu en plus",emoji:"🎮",cost:150,monthlyLimit:false},
-    {id:"cash15",title:"15 $",emoji:"💵",cost:150,monthlyLimit:true}
-  ],
-  rewardRequests:[],
-  updatedAt:now()
+ schemaVersion:2,settings:{app:"mission-maison",behaviorMode:true},parentPin:"1234",
+ children:[
+  {id:"c1",name:"Dylan",avatar:"🦸",points:0},{id:"c2",name:"Nolan",avatar:"🦖",points:0},
+  {id:"c3",name:"Enfant 3",avatar:"🦄",points:0},{id:"c4",name:"Enfant 4",avatar:"🐼",points:0},
+  {id:"c5",name:"Enfant 5",avatar:"🐯",points:0},{id:"c6",name:"Enfant 6",avatar:"🦊",points:0}
+ ],
+ behaviorEvents:[],instructions:[],punishments:[],updatedAt:now()
+};
+
+const BEHAVIORS={
+ spontaneous:{icon:"🌟",label:"A aidé sans qu'on demande",score:3},
+ kind:{icon:"❤️",label:"Beau geste",score:2},
+ first:{icon:"✅",label:"A écouté / fait du premier coup",score:2},
+ help:{icon:"🤝",label:"A aidé après demande",score:1},
+ repeat:{icon:"⚠️",label:"A fallu répéter",score:-1},
+ argue:{icon:"😤",label:"S'est obstiné",score:-2},
+ disrespect:{icon:"🗯️",label:"Manque de respect",score:-3},
+ bad:{icon:"👎",label:"Mauvais comportement",score:-2}
+};
+
+const OUTCOMES={
+ first:{icon:"✅",label:"Fait sans rappel",score:2},
+ one:{icon:"🙂",label:"Fait après 1 rappel",score:1},
+ many:{icon:"⚠️",label:"Fait après plusieurs rappels",score:-1},
+ notdone:{icon:"❌",label:"Pas fait",score:-2},
+ refusal:{icon:"😤",label:"Refus / obstination",score:-3}
 };
 
 function normalize(x){
-  if(!x||typeof x!=="object")x=clone(base);
-
-  x.settings=x.settings||{app:"mission-maison"};
-  x.taskNotes=x.taskNotes||{};
-  if(!Array.isArray(x.habits))x.habits=clone(base.habits);
-  x.habitStates=x.habitStates||{};
-  if(!Array.isArray(x.pointAdjustments))x.pointAdjustments=[];
-  if(!Array.isArray(x.rewardRequests))x.rewardRequests=[];
-  if(!Array.isArray(x.rewards))x.rewards=[];
-
-  x.rewards=x.rewards.map(r=>({
-    ...r,
-    cost:Math.max(0,Number(r.cost||0)),
-    monthlyLimit:!!r.monthlyLimit
-  }));
-
-  // Ajoute une seule fois la récompense argent à une famille déjà existante.
-  if(!x.settings.cashRewardSeeded){
-    const existing=x.rewards.find(r=>{
-      const t=String(r.title||"").replace(/\s/g,"").toLowerCase();
-      return r.id==="cash15"||t==="15$";
-    });
-    if(existing){
-      existing.cost=150;
-      existing.emoji=existing.emoji||"💵";
-      existing.monthlyLimit=true;
-    }else{
-      x.rewards.push({id:"cash15",title:"15 $",emoji:"💵",cost:150,monthlyLimit:true});
-    }
-    x.settings.cashRewardSeeded=true;
-  }
-
-  return x;
+ if(!x||typeof x!=="object")x=clone(base);
+ x.settings=x.settings||{app:"mission-maison"};x.settings.behaviorMode=true;
+ if(!Array.isArray(x.children)||!x.children.length)x.children=clone(base.children);
+ if(!Array.isArray(x.behaviorEvents))x.behaviorEvents=[];
+ if(!Array.isArray(x.instructions))x.instructions=[];
+ if(!Array.isArray(x.punishments))x.punishments=[];
+ return x;
 }
-
 function migrate(x){
-  if(x?.schemaVersion===2)return normalize(x);
-  let n=clone(base);
-  if(x?.children)n.children=x.children.map(c=>({...c,points:0}));
-  if(x?.tasks)n.tasks=x.tasks.map(t=>({
-    id:t.id||uid("t"),childId:t.childId,title:t.title,emoji:t.emoji||"🧹",
-    points:Number(t.points||0),days:[...ALL]
-  }));
-  if(x?.rewards)n.rewards=x.rewards;
-  return normalize(n);
+ if(x?.schemaVersion===2)return normalize(x);
+ let n=clone(base);
+ if(Array.isArray(x?.children)&&x.children.length)n.children=x.children;
+ return normalize(n);
 }
-
 function load(){
-  try{
-    let x=localStorage.getItem(STORE);
-    if(x)return normalize(migrate(JSON.parse(x)));
-    x=localStorage.getItem(OLD);
-    if(x)return normalize(migrate(JSON.parse(x)));
-  }catch{}
-  return normalize(clone(base));
+ try{
+  let x=localStorage.getItem(STORE);if(x)return normalize(migrate(JSON.parse(x)));
+  x=localStorage.getItem(OLD);if(x)return normalize(migrate(JSON.parse(x)));
+ }catch{}
+ return clone(base);
 }
-
 function loadProf(){
-  try{
-    return JSON.parse(localStorage.getItem(PROF))||{
-      apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",
-      joinCode:"",cloudVersion:0,pushEnabled:false
-    };
-  }catch{
-    return {apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",
-      joinCode:"",cloudVersion:0,pushEnabled:false};
-  }
+ try{return JSON.parse(localStorage.getItem(PROF))||{apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",joinCode:"",cloudVersion:0}}
+ catch{return{apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",joinCode:"",cloudVersion:0}}
 }
 
-let data=load(),profile=loadProf(),view="kids",unlocked=false,
-active=localStorage.getItem(ACTIVE)||data.children[0].id,
-busy=false,dirty=false,timer=null,installPrompt=null,
-oneSignalReady=false,oneSignalInitPromise=null,oneSignalSdk=null;
+let data=load(),profile=loadProf(),view="today",active=localStorage.getItem(ACTIVE)||data.children[0].id;
+let historyDate=day(),weekAnchor=day(),busy=false,dirty=false,syncTimer=null,installPrompt=null,audioCtx=null,alarmHandled={};
 
-if(!profile.apiUrl)profile.apiUrl=API_DEFAULT;
-
-const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-}[m]));
-
-function toast(s){
-  let e=document.querySelector("#toast");
-  e.textContent=s;
-  e.classList.remove("hidden");
-  clearTimeout(toast.t);
-  toast.t=setTimeout(()=>e.classList.add("hidden"),2600);
-}
-function save(localOnly=false){
-  data.updatedAt=now();
-  localStorage.setItem(STORE,JSON.stringify(data));
-  render();
-  if(!localOnly&&profile.token){
-    dirty=true;
-    clearTimeout(timer);
-    timer=setTimeout(pushCloud,400);
-  }
-}
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+function toast(s){const e=document.querySelector("#toast");if(!e)return;e.textContent=s;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),2600)}
+function save(localOnly=false){data.updatedAt=now();localStorage.setItem(STORE,JSON.stringify(data));render();if(!localOnly&&profile.token){dirty=true;clearTimeout(syncTimer);syncTimer=setTimeout(pushCloud,350)}}
 function saveProf(){localStorage.setItem(PROF,JSON.stringify(profile))}
-function child(id){return data.children.find(x=>x.id===id)}
-function st(id,date=day()){return data.taskStates?.[date]?.[id]||"todo"}
-function setst(id,s,date=day()){data.taskStates[date]=data.taskStates[date]||{};data.taskStates[date][id]=s}
-function taskNote(id,date=day()){return data.taskNotes?.[date]?.[id]||""}
-function setTaskNote(id,msg,date=day()){
-  data.taskNotes[date]=data.taskNotes[date]||{};
-  if(msg)data.taskNotes[date][id]=msg;else delete data.taskNotes[date][id];
-}
-function tasksFor(cid,date=day()){
-  let wd=new Date(date+"T12:00:00").getDay();
-  return data.tasks.filter(t=>t.childId===cid&&(t.days||ALL).includes(wd));
-}
-function habitsFor(cid,date=day()){
-  let wd=new Date(date+"T12:00:00").getDay();
-  return data.habits.filter(h=>(h.childId==="all"||h.childId===cid)&&(h.days||ALL).includes(wd));
-}
-function habitKey(cid,hid){return `${hid}:${cid}`}
-function habitDone(cid,hid,date=day()){return !!data.habitStates?.[date]?.[habitKey(cid,hid)]}
-function setHabitDone(cid,hid,val,date=day()){
-  data.habitStates[date]=data.habitStates[date]||{};
-  data.habitStates[date][habitKey(cid,hid)]=!!val;
-}
-function pendingPts(cid){
-  return tasksFor(cid).filter(t=>st(t.id)==="pending")
-    .reduce((a,t)=>a+Number(t.points||0),0);
-}
-function completed(cid){
-  return tasksFor(cid).filter(t=>["pending","done"].includes(st(t.id))).length;
-}
-function pct(cid){
-  let t=tasksFor(cid);
-  return t.length?Math.round(completed(cid)/t.length*100):0;
-}
-function dlabel(d){
-  d=d||ALL;
-  if(d.length===7)return"Tous les jours";
-  if(JSON.stringify(d)===JSON.stringify(WEEK))return"Lun–Ven";
-  if(JSON.stringify(d)===JSON.stringify(WKND))return"Sam–Dim";
-  return"Jours choisis";
-}
+function child(id){return data.children.find(c=>c.id===id)}
 function choose(id){active=id;localStorage.setItem(ACTIVE,id);render()}
+function eventsFor(cid,dateStr){return data.behaviorEvents.filter(e=>e.childId===cid&&e.date===dateStr).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))}
+function instructionsFor(cid,dateStr){return data.instructions.filter(i=>i.childId===cid&&i.date===dateStr).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))}
+function scoreFor(cid,dateStr){return eventsFor(cid,dateStr).reduce((n,e)=>n+Number(e.score||0),0)}
+function activePunishment(cid){return data.punishments.find(p=>p.childId===cid&&p.status==="active")}
+function fmtTime(ts){try{return new Date(ts).toLocaleTimeString("fr-CA",{hour:"2-digit",minute:"2-digit"})}catch{return""}}
+
 function tabs(){
-  return `<div class="tabs">
-    <button class="tab ${view==="kids"?"on":""}" onclick="view='kids';render()">🎮 Enfants</button>
-    <button class="tab ${view==="parents"?"on":""}" onclick="view='parents';render()">🔒 Parents</button>
-    <button class="tab ${view==="family"?"on":""}" onclick="view='family';render()">☁️ Famille</button>
-  </div>`;
+ return '<div class="tabs">'+
+  '<button class="tab '+(view==="today"?"on":"")+'" onclick="view=\'today\';render()">🏠 Aujourd’hui</button>'+
+  '<button class="tab '+(view==="history"?"on":"")+'" onclick="view=\'history\';render()">📅 Historique</button>'+
+  '<button class="tab '+(view==="week"?"on":"")+'" onclick="view=\'week\';render()">📊 Semaine</button>'+
+  '<button class="tab '+(view==="family"?"on":"")+'" onclick="view=\'family\';render()">☁️ Famille</button>'+
+ '</div>';
 }
 
-/* ===== Limite mensuelle des récompenses ===== */
-function monthKey(ts){
-  const d=ts?new Date(ts):new Date();
-  if(Number.isNaN(d.getTime()))return "";
-  try{
-    const parts=new Intl.DateTimeFormat("en-CA",{
-      timeZone:"America/Toronto",year:"numeric",month:"2-digit"
-    }).formatToParts(d);
-    const y=parts.find(p=>p.type==="year")?.value||String(d.getFullYear());
-    const m=parts.find(p=>p.type==="month")?.value||String(d.getMonth()+1).padStart(2,"0");
-    return `${y}-${m}`;
-  }catch{
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-  }
-}
-function rewardUsedThisMonth(cid,rid){
-  const mk=monthKey();
-  return data.rewardRequests.some(q=>
-    q.childId===cid &&
-    q.rewardId===rid &&
-    q.status==="approved" &&
-    monthKey(q.approvedAt||q.createdAt)===mk
-  );
-}
-function pendingReward(cid,rid){
-  return data.rewardRequests.find(q=>
-    q.childId===cid&&q.rewardId===rid&&q.status==="pending"
-  );
+function childCards(){
+ return '<div class="grid">'+data.children.map(c=>{
+  const ev=eventsFor(c.id,day()),pos=ev.filter(x=>x.score>0).length,neg=ev.filter(x=>x.score<0).length,p=activePunishment(c.id);
+  return '<button class="card child '+(c.id===active?"on":"")+'" onclick="choose(\''+c.id+'\')">'+
+   (p?'<span class="timerBadge">⏱️ actif</span>':'')+
+   '<div class="avatar">'+c.avatar+'</div><div class="name">'+esc(c.name)+'</div>'+
+   '<div class="summary"><span class="scorePos">+'+pos+' positif</span> · <span class="scoreNeg">'+neg+' négatif</span></div>'+
+  '</button>';
+ }).join("")+'</div>';
 }
 
-function speakText(txt){
-  if(!("speechSynthesis" in window))return toast("La lecture vocale n'est pas disponible sur cet appareil.");
-  window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(txt);
-  u.lang="fr-CA";u.rate=0.9;u.pitch=1;
-  const voices=window.speechSynthesis.getVoices();
-  const fr=voices.find(v=>/^fr(-|_)/i.test(v.lang))||voices.find(v=>/French|Français/i.test(v.name));
-  if(fr)u.voice=fr;
-  window.speechSynthesis.speak(u);
+function addBehavior(cid,type){
+ const b=BEHAVIORS[type];if(!b)return;
+ data.behaviorEvents.push({id:uid("ev"),childId:cid,date:day(),type,label:b.label,icon:b.icon,score:b.score,createdAt:now(),source:"quick"});
+ save();toast(b.icon+" "+b.label);
 }
-function speakTask(id){
-  const t=data.tasks.find(x=>x.id===id);if(!t)return;
-  const n=taskNote(id);
-  speakText(n&&st(id)==="redo"?`${t.title}. À corriger : ${n}`:t.title);
-}
-function speakHabit(id){
-  const h=data.habits.find(x=>x.id===id);
-  if(h)speakText(h.title);
+function quickButtons(){
+ return '<div class="quick">'+Object.entries(BEHAVIORS).map(([k,b])=>
+  '<button class="btn '+(b.score>0?"success":b.score<-1?"danger":"secondary")+'" onclick="addBehavior(\''+active+'\',\''+k+'\')">'+b.icon+' '+esc(b.label)+'</button>'
+ ).join("")+'</div>';
 }
 
-function kidTask(t){
-  let s=st(t.id),txt=s==="todo"?"À faire":s==="pending"?"En attente du parent":s==="done"?"Confirmée ✅":"À refaire";
-  const note=taskNote(t.id);
-  const noteBox=s==="redo"&&note
-    ?`<div class="notice" style="margin-top:8px"><b>👀 À corriger :</b> ${esc(note)}</div>`
-    :"";
-  return `<div class="task">
-    <div class="emoji">${t.emoji}</div>
-    <div class="grow">
-      <div class="title">${esc(t.title)}</div>
-      <div class="small">⭐ ${t.points} points</div>
-      <span class="status ${s}">${txt}</span>
-      ${noteBox}
-      <div class="actions">
-        <button class="btn primary" onclick="speakTask('${t.id}')">🔊 Lire la tâche</button>
-        ${["todo","redo"].includes(s)?`<button class="btn success" onclick="finish('${t.id}')">✅ J'ai terminé!</button>`:""}
-      </div>
-    </div>
-  </div>`;
+function addInstruction(){
+ const input=document.querySelector("#instructionText"),title=(input?.value||"").trim();if(!title)return toast("Écris la consigne");
+ data.instructions.push({id:uid("ins"),childId:active,date:day(),title,status:"pending",createdAt:now()});save();toast("Consigne ajoutée");
+}
+function completeInstruction(id,outcome){
+ const i=data.instructions.find(x=>x.id===id),o=OUTCOMES[outcome];if(!i||!o)return;
+ i.status=outcome;i.completedAt=now();
+ data.behaviorEvents=data.behaviorEvents.filter(e=>e.refId!==id);
+ data.behaviorEvents.push({id:uid("ev"),childId:i.childId,date:i.date,type:"instruction_"+outcome,label:i.title+" — "+o.label,icon:o.icon,score:o.score,createdAt:now(),source:"instruction",refId:id});
+ save();
+}
+function instructionRow(i){
+ const o=OUTCOMES[i.status];
+ return '<div class="instruction"><div class="emoji">'+(o?.icon||"📋")+'</div><div class="grow"><div class="title">'+esc(i.title)+'</div>'+
+  (i.status==="pending"
+   ?'<span class="status pending">En attente</span><div class="actions">'+
+    '<button class="btn success" onclick="completeInstruction(\''+i.id+'\',\'first\')">✅ Sans rappel</button>'+
+    '<button class="btn secondary" onclick="completeInstruction(\''+i.id+'\',\'one\')">🙂 1 rappel</button>'+
+    '<button class="btn orange" onclick="completeInstruction(\''+i.id+'\',\'many\')">⚠️ Plusieurs</button>'+
+    '<button class="btn danger" onclick="completeInstruction(\''+i.id+'\',\'notdone\')">❌ Pas fait</button>'+
+    '<button class="btn danger" onclick="completeInstruction(\''+i.id+'\',\'refusal\')">😤 Refus</button></div>'
+   :'<span class="status '+(o.score>0?"done":o.score<0?"bad":"neutral")+'">'+esc(o.label)+'</span><div class="actions"><button class="btn secondary" onclick="resetInstruction(\''+i.id+'\')">↩️ Modifier résultat</button></div>')+
+ '</div></div>';
+}
+function resetInstruction(id){
+ const i=data.instructions.find(x=>x.id===id);if(!i)return;
+ i.status="pending";delete i.completedAt;
+ data.behaviorEvents=data.behaviorEvents.filter(e=>e.refId!==id);save();
 }
 
-function kidHabit(c,h){
-  const done=habitDone(c.id,h.id);
-  return `<div class="task">
-    <div class="emoji">${h.emoji}</div>
-    <div class="grow">
-      <div class="title">${esc(h.title)}</div>
-      <div class="small">Habitude quotidienne · aucun point</div>
-      <span class="status ${done?"done":"todo"}">${done?"Fait ✅":"À faire"}</span>
-      <div class="actions">
-        <button class="btn primary" onclick="speakHabit('${h.id}')">🔊 Lire</button>
-        ${done
-          ?`<button class="btn secondary" onclick="toggleHabit('${c.id}','${h.id}')">↩️ Annuler</button>`
-          :`<button class="btn success" onclick="toggleHabit('${c.id}','${h.id}')">✅ Fait</button>`}
-      </div>
-    </div>
-  </div>`;
+function deleteEvent(id){
+ const e=data.behaviorEvents.find(x=>x.id===id);if(!e)return;
+ if(e.source==="punishment"&&e.refId)data.punishments=data.punishments.filter(p=>p.id!==e.refId);
+ data.behaviorEvents=data.behaviorEvents.filter(x=>x.id!==id);save();
+}
+function eventRow(e){
+ return '<div class="event"><div class="emoji">'+(e.icon||"•")+'</div><div class="grow"><div class="title">'+esc(e.label)+'</div>'+
+  '<div class="small">'+fmtTime(e.createdAt)+' · '+(e.score>0?"+":"")+e.score+' au bilan</div></div>'+
+  '<button class="btn secondary" onclick="deleteEvent(\''+e.id+'\')">🗑️</button></div>';
 }
 
-function rewardCard(c,r){
-  const q=pendingReward(c.id,r.id);
-  const used=!!r.monthlyLimit&&rewardUsedThisMonth(c.id,r.id);
-  const meta=`⭐ ${r.cost}${r.monthlyLimit?" · maximum 1 fois/mois":""}`;
-
-  let action="";
-  if(used){
-    action=`<span class="status done">Déjà prise ce mois-ci ✅</span>`;
-  }else if(q){
-    action=`<span class="status pending">Demandée</span>`;
-  }else{
-    action=`<button class="btn secondary" onclick="askReward('${c.id}','${r.id}')" ${c.points<r.cost?"disabled":""}>Je la veux</button>`;
-  }
-
-  return `<div class="reward">
-    <div class="emoji">${r.emoji}</div>
-    <div class="grow">
-      <b>${esc(r.title)}</b>
-      <div class="small">${meta}</div>
-      ${r.monthlyLimit?`<span class="moneyTag">🔒 1 fois par mois</span>`:""}
-    </div>
-    ${action}
-  </div>`;
+function ensureAudio(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume()}catch{}}
+function beep(){
+ ensureAudio();
+ try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.frequency.value=880;g.gain.value=.12;o.start();setTimeout(()=>o.stop(),500)}catch{}
+ try{navigator.vibrate?.([300,150,300,150,500])}catch{}
+}
+function alarm(p){
+ if(alarmHandled[p.id])return;alarmHandled[p.id]=true;beep();setTimeout(beep,700);
+ const c=child(p.childId);toast("⏰ Punition terminée — "+(c?.name||"Enfant"));
+ try{if(Notification.permission==="granted")new Notification("Mission Maison",{body:"Punition terminée — "+(c?.name||"Enfant")})}catch{}
+}
+function startPunishment(mins){
+ const c=child(active);if(!c)return;ensureAudio();
+ const reason=(document.querySelector("#punishReason")?.value||"Punition").trim()||"Punition";
+ const old=activePunishment(active);
+ if(old&&!confirm("Un chrono est déjà actif pour "+c.name+". Le remplacer?"))return;
+ if(old){old.status="stopped";old.stoppedAt=now()}
+ const p={id:uid("pun"),childId:active,date:day(),reason,minutes:mins,startedAt:now(),endAt:new Date(Date.now()+mins*60000).toISOString(),status:"active"};
+ data.punishments.push(p);
+ data.behaviorEvents.push({id:uid("ev"),childId:active,date:day(),type:"punishment",label:"Punition "+mins+" min — "+reason,icon:"⏱️",score:-2,createdAt:now(),source:"punishment",refId:p.id});
+ save();toast("⏱️ Chrono "+mins+" min démarré");
+}
+function stopPunishment(id){const p=data.punishments.find(x=>x.id===id);if(!p||p.status!=="active")return;p.status="stopped";p.stoppedAt=now();save();toast("Chrono arrêté")}
+function addPunishTime(id,mins){const p=data.punishments.find(x=>x.id===id);if(!p||p.status!=="active")return;p.endAt=new Date(new Date(p.endAt).getTime()+mins*60000).toISOString();p.minutes+=mins;save()}
+function remaining(p){return Math.max(0,new Date(p.endAt).getTime()-Date.now())}
+function clock(ms){const s=Math.ceil(ms/1000),m=Math.floor(s/60);return pad(m)+":"+pad(s%60)}
+function timerPanel(){
+ const p=activePunishment(active);
+ if(!p)return '<div class="notice">Aucun chrono actif pour cet enfant.</div>';
+ return '<div class="timerBox"><div class="emoji">⏱️</div><div class="grow"><div class="title">'+esc(p.reason)+'</div><div class="timerClock" data-timer="'+p.id+'">'+clock(remaining(p))+'</div>'+
+  '<div class="small">Punition de '+p.minutes+' min</div><div class="actions"><button class="btn secondary" onclick="addPunishTime(\''+p.id+'\',5)">+5 min</button><button class="btn danger" onclick="stopPunishment(\''+p.id+'\')">Arrêter</button></div></div></div>';
+}
+function tickTimers(){
+ let changed=false;
+ data.punishments.filter(p=>p.status==="active").forEach(p=>{
+  const ms=remaining(p),el=document.querySelector('[data-timer="'+p.id+'"]');if(el)el.textContent=clock(ms);
+  if(ms<=0){p.status="ended";p.endedAt=now();changed=true;if(Date.now()-new Date(p.endAt).getTime()<120000)alarm(p)}
+ });
+ if(changed)save();
+}
+function requestTimerAlerts(){
+ ensureAudio();
+ if(!("Notification" in window))return toast("Les alertes système ne sont pas disponibles ici");
+ if(Notification.permission==="granted")return toast("Alertes déjà activées 🔔");
+ Notification.requestPermission().then(x=>toast(x==="granted"?"Alertes activées 🔔":"Alertes non autorisées"));
 }
 
-function kids(){
-  let c=child(active)||data.children[0];
-  return `<div class="grid">
-    ${data.children.map(x=>`<button class="card child" onclick="choose('${x.id}')">
-      <div class="avatar">${x.avatar}</div>
-      <div class="name">${esc(x.name)}</div>
-      <div class="pts">⭐ ${x.points}</div>
-      <div class="wait">+ ${pendingPts(x.id)} en attente</div>
-      <div class="progress"><i style="width:${pct(x.id)}%"></i></div>
-      <div class="small">${completed(x.id)}/${tasksFor(x.id).length} missions aujourd'hui</div>
-    </button>`).join("")}
-  </div>
-
-  <div class="card">
-    <div class="stat"><h2>${c.avatar} ${esc(c.name)}</h2><span class="pill">⭐ ${c.points}</span></div>
-    <div class="notice">Tu peux continuer toutes tes missions sans attendre. Les points arrivent seulement après confirmation. 👍</div>
-    ${tasksFor(c.id).map(kidTask).join("")||`<p class="small">Aucune mission aujourd'hui 🎉</p>`}
-  </div>
-
-  <div class="card">
-    <h2>🧼 Petites habitudes</h2>
-    <div class="notice">Les gestes normaux de la maison. Pas de points : on les fait simplement chaque jour. 💪</div>
-    ${habitsFor(c.id).map(h=>kidHabit(c,h)).join("")||`<p class="small">Aucune petite habitude aujourd'hui.</p>`}
-  </div>
-
-  <div class="card">
-    <h2>🎁 Récompenses</h2>
-    <div class="notice">Toutes les récompenses utilisent la même banque d'étoiles. Les récompenses marquées 🔒 ne peuvent être prises qu'une fois par mois.</div>
-    ${data.rewards.map(r=>rewardCard(c,r)).join("")}
-  </div>`;
+function todayView(){
+ const c=child(active)||data.children[0],ins=instructionsFor(c.id,day()),ev=eventsFor(c.id,day());
+ return childCards()+
+ '<div class="card"><div class="stat"><h2>'+c.avatar+' '+esc(c.name)+'</h2><span class="pill">Bilan du jour '+(scoreFor(c.id,day())>=0?"+":"")+scoreFor(c.id,day())+'</span></div><h3>⚡ Noter vite</h3>'+quickButtons()+'</div>'+
+ '<div class="card"><h2>📋 Consigne donnée</h2><div class="notice">Exemple : « Faire sa chambre ». Ensuite, tu notes seulement comment ça s’est passé.</div>'+
+ '<div class="form"><input id="instructionText" list="suggestions" placeholder="Ex. Faire sa chambre"><datalist id="suggestions"><option value="Faire sa chambre"><option value="Ranger ses choses"><option value="Mettre la table"><option value="Prendre sa douche"><option value="Faire ses devoirs"></datalist>'+
+ '<button class="btn primary" onclick="addInstruction()">Ajouter la consigne</button></div>'+ins.map(instructionRow).join("")+'</div>'+
+ '<div class="card"><h2>⏱️ Punition avec chrono</h2><div class="form"><input id="punishReason" placeholder="Raison" value="Refus / obstination"><button class="btn secondary" onclick="requestTimerAlerts()">🔔 Activer alerte</button></div>'+
+ '<div class="actions"><button class="btn orange" onclick="startPunishment(5)">5 min</button><button class="btn orange" onclick="startPunishment(10)">10 min</button><button class="btn orange" onclick="startPunishment(15)">15 min</button><button class="btn orange" onclick="startPunishment(20)">20 min</button></div>'+timerPanel()+'</div>'+
+ '<div class="card"><h2>📝 Aujourd’hui</h2>'+(ev.length?ev.map(eventRow).join(""):'<div class="notice">🙂 Journée neutre pour l’instant : rien de mal noté, rien de spécial non plus.</div>')+'</div>';
 }
 
-function finish(id){
-  if(["pending","done"].includes(st(id)))return;
-  const t=data.tasks.find(x=>x.id===id);
-  setTaskNote(id,"");
-  setst(id,"pending");
-  save();
-  confetti();
-  notifyTaskFinished(t);
+function dateControls(){
+ return '<div class="row"><button class="btn secondary" onclick="historyDate=addDays(historyDate,-1);render()">← Jour</button><input id="historyDate" type="date" value="'+historyDate+'" onchange="historyDate=this.value;render()"><button class="btn secondary" onclick="historyDate=addDays(historyDate,1);render()">Jour →</button></div>';
 }
-function toggleHabit(cid,hid){
-  setHabitDone(cid,hid,!habitDone(cid,hid));
-  save();
-}
-function askReward(cid,rid){
-  let c=child(cid),r=data.rewards.find(x=>x.id===rid);
-  if(!c||!r)return;
-  if(r.monthlyLimit&&rewardUsedThisMonth(cid,rid))
-    return toast("Cette récompense a déjà été prise ce mois-ci 🔒");
-  if(pendingReward(cid,rid))
-    return toast("Cette récompense est déjà demandée");
-  if(c.points<r.cost)
-    return toast("Pas assez d'étoiles");
-  data.rewardRequests.push({
-    id:uid("q"),childId:cid,rewardId:rid,status:"pending",createdAt:now()
-  });
-  save();
-  toast("Demande envoyée 🎁");
+function historyView(){
+ const c=child(active)||data.children[0],ev=eventsFor(c.id,historyDate),ins=instructionsFor(c.id,historyDate);
+ return childCards()+'<div class="card"><h2>📅 Historique — '+esc(c.name)+'</h2>'+dateControls()+
+ '<div class="verdict">'+(ev.length?'Bilan du jour : '+(scoreFor(c.id,historyDate)>=0?"+":"")+scoreFor(c.id,historyDate):'🙂 Journée neutre — aucun événement particulier noté')+'</div>'+
+ '<h3>Consignes</h3>'+(ins.length?ins.map(instructionRow).join(""):'<p class="small">Aucune consigne enregistrée.</p>')+
+ '<h3>Événements</h3>'+(ev.length?ev.map(eventRow).join(""):'<p class="small">Aucun événement enregistré.</p>')+'</div>';
 }
 
-function pendings(){
-  let a=[];
-  Object.entries(data.taskStates||{}).forEach(([date,o])=>
-    Object.entries(o).forEach(([id,s])=>{
-      let t=data.tasks.find(x=>x.id===id);
-      if(s==="pending"&&t)a.push({date,t});
-    })
-  );
-  return a.sort((a,b)=>b.date.localeCompare(a.date));
+function mondayOf(s){const d=fromDay(s),dow=(d.getDay()+6)%7;d.setDate(d.getDate()-dow);return day(d)}
+function weekData(cid,anchor){
+ const start=mondayOf(anchor),end=addDays(start,6),ev=data.behaviorEvents.filter(e=>e.childId===cid&&e.date>=start&&e.date<=end);
+ const score=ev.reduce((n,e)=>n+Number(e.score||0),0),pos=ev.filter(e=>e.score>0).length,neg=ev.filter(e=>e.score<0).length,pun=ev.filter(e=>e.type==="punishment").length;
+ const outcomes={first:0,one:0,many:0,notdone:0,refusal:0};
+ ev.forEach(e=>{const k=String(e.type||"").replace("instruction_","");if(k in outcomes)outcomes[k]++});
+ let verdict="⚪ Semaine neutre — rien de particulier noté";
+ if(ev.length){
+  if(score>=12&&neg<=2)verdict="🌟 Excellente semaine";
+  else if(score>=5)verdict="🟢 Bonne semaine";
+  else if(score>=-4)verdict="⚪ Semaine correcte";
+  else if(score>=-10)verdict="🟠 Semaine à travailler";
+  else verdict="🔴 Semaine difficile";
+ }
+ return {start,end,ev,score,pos,neg,pun,outcomes,verdict};
 }
-function parentPending(x){
-  let c=child(x.t.childId);
-  return `<div class="task">
-    <div class="emoji">${x.t.emoji}</div>
-    <div class="grow">
-      <div class="title">${esc(c?.name)} — ${esc(x.t.title)}</div>
-      <div class="small">${x.date===day()?"Aujourd'hui":x.date} · ⭐ ${x.t.points}</div>
-      <div class="actions">
-        <button class="btn success" onclick="approve('${x.t.id}','${x.date}')">✅ Confirmer</button>
-        <button class="btn danger" onclick="redo('${x.t.id}','${x.date}')">↩️ À refaire</button>
-      </div>
-    </div>
-  </div>`;
-}
-function rewardReq(q){
-  let c=child(q.childId),r=data.rewards.find(x=>x.id===q.rewardId);
-  const used=!!r?.monthlyLimit&&rewardUsedThisMonth(q.childId,q.rewardId);
-  return `<div class="reward">
-    <div class="emoji">${r?.emoji||"🎁"}</div>
-    <div class="grow">
-      <b>${esc(c?.name)} veut ${esc(r?.title||"Récompense")}</b>
-      <div class="small">⭐ ${r?.cost||0}${r?.monthlyLimit?" · 1 fois/mois":""}</div>
-      ${used?`<span class="status done">Déjà donnée ce mois-ci</span>`:""}
-    </div>
-    <div class="actions">
-      <button class="btn success" onclick="giveReward('${q.id}')" ${used?"disabled":""}>✅ Donner</button>
-      <button class="btn danger" onclick="denyReward('${q.id}')">❌</button>
-    </div>
-  </div>`;
-}
-function parentManageTask(t){
-  const s=st(t.id),label=s==="todo"?"À faire":s==="pending"?"En attente":s==="done"?"Confirmée ✅":"À refaire";
-  const undo=s!=="todo"?`<button class="btn secondary" onclick="undoToday('${t.id}')">↩️ Annuler aujourd'hui</button>`:"";
-  return `<div class="reward">
-    <div class="emoji">${t.emoji}</div>
-    <div class="grow">
-      <b>${esc(child(t.childId)?.name)} — ${esc(t.title)}</b>
-      <div class="small">⭐ ${t.points} · ${dlabel(t.days)} · Aujourd'hui : ${label}</div>
-    </div>
-    <div class="actions">
-      ${undo}
-      <button class="btn secondary" onclick="editTask('${t.id}')">✏️</button>
-      <button class="btn danger" onclick="delTask('${t.id}')">🗑️</button>
-    </div>
-  </div>`;
-}
-function habitWho(h){return h.childId==="all"?"Tous les enfants":(child(h.childId)?.name||"Enfant")}
-function parentManageHabit(h){
-  return `<div class="reward">
-    <div class="emoji">${h.emoji}</div>
-    <div class="grow">
-      <b>${esc(h.title)}</b>
-      <div class="small">${esc(habitWho(h))} · ${dlabel(h.days)} · aucun point</div>
-    </div>
-    <div class="actions">
-      <button class="btn secondary" onclick="editHabit('${h.id}')">✏️</button>
-      <button class="btn danger" onclick="delHabit('${h.id}')">🗑️</button>
-    </div>
-  </div>`;
-}
-function activePenalties(){
-  return (data.pointAdjustments||[])
-    .filter(x=>x.type==="penalty"&&!x.undoneAt)
-    .slice().reverse().slice(0,10);
-}
-function penaltyRow(x){
-  const c=child(x.childId),when=new Date(x.createdAt).toLocaleDateString("fr-CA");
-  return `<div class="reward">
-    <div class="emoji">⚠️</div>
-    <div class="grow">
-      <b>${esc(c?.name||"Enfant")} · ${x.amount} point(s)</b>
-      <div class="small">${esc(x.reason||"Sans raison")} · ${when}</div>
-    </div>
-    <button class="btn secondary" onclick="undoPenalty('${x.id}')">↩️ Annuler</button>
-  </div>`;
-}
-function parentRewardRow(r){
-  return `<div class="reward">
-    <div class="emoji">${r.emoji}</div>
-    <div class="grow">
-      <b>${esc(r.title)}</b>
-      <div class="small">⭐ ${r.cost}${r.monthlyLimit?" · maximum 1 fois/mois":""}</div>
-      ${r.monthlyLimit?`<span class="moneyTag">🔒 Mensuelle</span>`:""}
-    </div>
-    <div class="actions">
-      <button class="btn secondary" onclick="editReward('${r.id}')">✏️</button>
-      <button class="btn danger" onclick="delReward('${r.id}')">🗑️</button>
-    </div>
-  </div>`;
+function shiftWeek(n){weekAnchor=addDays(mondayOf(weekAnchor),n*7);render()}
+function weekView(){
+ const start=mondayOf(weekAnchor),end=addDays(start,6);
+ return '<div class="card"><div class="row"><button class="btn secondary" onclick="shiftWeek(-1)">← Semaine</button><div><h2>📊 Verdict de la semaine</h2><div class="small">'+start+' au '+end+'</div></div><button class="btn secondary" onclick="shiftWeek(1)">Semaine →</button></div></div>'+
+ data.children.map(c=>{const w=weekData(c.id,weekAnchor);return '<div class="card"><div class="stat"><h2>'+c.avatar+' '+esc(c.name)+'</h2><span class="pill">'+(w.score>=0?"+":"")+w.score+'</span></div>'+
+  '<div class="verdict">'+w.verdict+'</div>'+
+  '<div class="grid"><div class="notice"><b>👍 Positifs</b><br>'+w.pos+'</div><div class="notice"><b>⚠️ Négatifs</b><br>'+w.neg+'</div><div class="notice"><b>⏱️ Punitions</b><br>'+w.pun+'</div><div class="notice"><b>📋 Consignes réussies</b><br>'+(w.outcomes.first+w.outcomes.one)+'</div></div>'+
+  '<div class="small" style="margin-top:10px">Sans rappel: '+w.outcomes.first+' · 1 rappel: '+w.outcomes.one+' · plusieurs rappels: '+w.outcomes.many+' · pas fait: '+w.outcomes.notdone+' · refus: '+w.outcomes.refusal+'</div></div>'
+ }).join("");
 }
 
-function parents(){
-  if(!unlocked)return `<div class="card">
-    <h2>🔒 Mode Parents</h2>
-    <div class="form">
-      <input id="pin" inputmode="numeric" placeholder="NIP parent">
-      <button class="btn primary" onclick="unlock()">Déverrouiller</button>
-    </div>
-    <p class="small">NIP de départ : 1234</p>
-  </div>`;
-
-  let p=pendings(),rq=data.rewardRequests.filter(x=>x.status==="pending");
-
-  return `<div class="card">
-    <div class="stat"><h2>⏳ À confirmer</h2><span class="pill">${p.length}</span></div>
-    ${p.map(parentPending).join("")||`<p class="small">Rien à confirmer 🎉</p>`}
-  </div>
-
-  <div class="card">
-    <h2>🎁 Demandes</h2>
-    ${rq.map(rewardReq).join("")||`<p class="small">Aucune demande.</p>`}
-  </div>
-
-  <div class="card">
-    <h2>➕ Ajouter une mission</h2>
-    <div class="form">
-      <select id="newChild">${data.children.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>
-      <input id="newTitle" placeholder="Ex. Faire son lit">
-      <input id="newEmoji" value="🧹">
-      <input id="newPts" type="number" value="10">
-      <select id="newDays">
-        <option value="all">Tous les jours</option>
-        <option value="week">Lun–Ven</option>
-        <option value="wknd">Sam–Dim</option>
-      </select>
-    </div>
-    <button class="btn big primary" onclick="addTask()">Ajouter</button>
-  </div>
-
-  <div class="card">
-    <h2>🧹 Gérer les missions</h2>
-    ${data.tasks.map(parentManageTask).join("")}
-  </div>
-
-  <div class="card">
-    <h2>🧼 Petites habitudes</h2>
-    <div class="notice">Ces gestes ne donnent aucun point et recommencent chaque jour.</div>
-    <div class="form">
-      <select id="habitChild">
-        <option value="all">Tous les enfants</option>
-        ${data.children.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}
-      </select>
-      <input id="habitTitle" placeholder="Ex. Ranger ses souliers">
-      <input id="habitEmoji" value="🧼">
-      <select id="habitDays">
-        <option value="all">Tous les jours</option>
-        <option value="week">Lun–Ven</option>
-        <option value="wknd">Sam–Dim</option>
-      </select>
-    </div>
-    <button class="btn big primary" onclick="addHabit()">Ajouter l'habitude</button>
-    ${data.habits.map(parentManageHabit).join("")}
-  </div>
-
-  <div class="card">
-    <h2>⚠️ Mauvais comportement</h2>
-    <div class="notice">Retirer des points avec une raison. Les points ne descendent jamais sous 0 et tu peux annuler une erreur.</div>
-    <div class="form">
-      <select id="penaltyChild">${data.children.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>
-      <input id="penaltyPoints" type="number" min="1" value="5" placeholder="Points">
-      <input id="penaltyReason" placeholder="Raison, ex. manque de respect">
-    </div>
-    <button class="btn big danger" onclick="addPenalty()">⚠️ Retirer les points</button>
-    ${activePenalties().map(penaltyRow).join("")||`<p class="small">Aucun retrait de points actif.</p>`}
-  </div>
-
-  <div class="card">
-    <h2>🎁 Gérer les récompenses</h2>
-    <div class="notice"><b>Pour ton 15 $ :</b> 150 ⭐ + « 1 fois par mois ». L'app bloque automatiquement une 2e demande le même mois pour le même enfant.</div>
-    <div class="form">
-      <input id="rTitle" placeholder="Ex. Choisir le film">
-      <input id="rEmoji" value="🎁">
-      <input id="rCost" type="number" value="50">
-      <select id="rLimit">
-        <option value="none">Sans limite mensuelle</option>
-        <option value="monthly">🔒 1 fois par mois</option>
-      </select>
-    </div>
-    <button class="btn big primary" onclick="addReward()">Ajouter</button>
-    ${data.rewards.map(parentRewardRow).join("")}
-  </div>
-
-  <div class="card">
-    <h2>👧👦 Enfants</h2>
-    ${data.children.map(c=>`<div class="reward">
-      <div class="emoji">${c.avatar}</div>
-      <div class="grow"><b>${esc(c.name)}</b><div class="small">⭐ ${c.points}</div></div>
-      <button class="btn secondary" onclick="editChild('${c.id}')">Modifier</button>
-    </div>`).join("")}
-  </div>
-
-  <div class="card">
-    <h2>⚙️ Parents</h2>
-    <button class="btn big secondary" onclick="changePin()">Changer le NIP</button>
-  </div>`;
-}
-
-function unlock(){
-  if(document.querySelector("#pin").value===data.parentPin){unlocked=true;render()}
-  else toast("NIP incorrect");
-}
-function approve(id,date){
-  let t=data.tasks.find(x=>x.id===id);
-  if(!t||st(id,date)!=="pending")return;
-  let c=child(t.childId);
-  c.points+=Number(t.points||0);
-  setTaskNote(id,"",date);
-  setst(id,"done",date);
-  save();
-  confetti();
-}
-function redo(id,date){
-  if(st(id,date)!=="pending")return;
-  const t=data.tasks.find(x=>x.id===id);
-  const why=prompt(
-    `Qu'est-ce qui n'est pas correct dans "${t?.title||"la tâche"}" ?\nL'enfant va voir et entendre ce message.`,
-    ""
-  );
-  if(why===null)return;
-  setTaskNote(id,why.trim()||"À vérifier et corriger.",date);
-  setst(id,"redo",date);
-  save();
-}
-function undoToday(id){
-  const t=data.tasks.find(x=>x.id===id);if(!t)return;
-  const s=st(id,day());if(s==="todo")return toast("Cette mission est déjà à faire");
-  const c=child(t.childId);
-  const msg=s==="done"
-    ?`Annuler la mission "${t.title}" aujourd'hui et retirer ${t.points} point(s)?`
-    :`Remettre la mission "${t.title}" à faire aujourd'hui?`;
-  if(!confirm(msg))return;
-  if(s==="done"&&c)c.points=Math.max(0,Number(c.points||0)-Number(t.points||0));
-  setTaskNote(id,"",day());
-  setst(id,"todo",day());
-  save();
-  toast(s==="done"?`Mission annulée · ${t.points} point(s) retiré(s)`:"Mission remise à faire ✅");
-}
-
-function giveReward(id){
-  let q=data.rewardRequests.find(x=>x.id===id),
-      c=child(q?.childId),
-      r=data.rewards.find(x=>x.id===q?.rewardId);
-
-  if(!q||!c||!r)return toast("Récompense introuvable");
-
-  if(r.monthlyLimit&&rewardUsedThisMonth(c.id,r.id)){
-    q.status="denied";
-    q.deniedAt=now();
-    save();
-    return toast("Déjà donnée ce mois-ci 🔒");
-  }
-
-  if(c.points<r.cost)return toast("Pas assez de points");
-
-  c.points-=r.cost;
-  q.status="approved";
-  q.approvedAt=now();
-  save();
-  confetti();
-  toast(`${r.title} confirmée pour ${c.name} ✅`);
-}
-
-function denyReward(id){
-  let q=data.rewardRequests.find(x=>x.id===id);
-  if(q){
-    q.status="denied";
-    q.deniedAt=now();
-    save();
-  }
-}
-
-function addTask(){
-  let title=document.querySelector("#newTitle").value.trim();
-  if(!title)return toast("Écris la mission");
-  let v=document.querySelector("#newDays").value,
-      days=v==="week"?WEEK:v==="wknd"?WKND:ALL;
-  data.tasks.push({
-    id:uid("t"),
-    childId:document.querySelector("#newChild").value,
-    title,
-    emoji:document.querySelector("#newEmoji").value||"🧹",
-    points:Number(document.querySelector("#newPts").value||0),
-    days:[...days]
-  });
-  save();
-}
-function editTask(id){
-  let t=data.tasks.find(x=>x.id===id);if(!t)return;
-  let n=prompt("Nom :",t.title);if(n===null)return;
-  let p=prompt("Points :",t.points);if(p===null)return;
-  let f=prompt("1=tous les jours, 2=lun-ven, 3=sam-dim","1");if(f===null)return;
-  t.title=n||t.title;
-  t.points=Math.max(0,Number(p)||0);
-  t.days=f==="2"?[...WEEK]:f==="3"?[...WKND]:[...ALL];
-  save();
-}
-function delTask(id){
-  if(confirm("Supprimer cette mission?")){
-    data.tasks=data.tasks.filter(x=>x.id!==id);
-    save();
-  }
-}
-function addHabit(){
-  const title=document.querySelector("#habitTitle").value.trim();
-  if(!title)return toast("Écris l'habitude");
-  const v=document.querySelector("#habitDays").value,
-        days=v==="week"?WEEK:v==="wknd"?WKND:ALL;
-  data.habits.push({
-    id:uid("h"),
-    childId:document.querySelector("#habitChild").value,
-    title,
-    emoji:document.querySelector("#habitEmoji").value||"🧼",
-    days:[...days]
-  });
-  save();
-}
-function editHabit(id){
-  const h=data.habits.find(x=>x.id===id);if(!h)return;
-  const n=prompt("Habitude :",h.title);if(n===null)return;
-  const who=prompt(
-    "Pour qui ? Écris ALL pour tous, sinon le nom exact de l'enfant.",
-    h.childId==="all"?"ALL":(child(h.childId)?.name||"ALL")
-  );if(who===null)return;
-  const f=prompt("1=tous les jours, 2=lun-ven, 3=sam-dim","1");if(f===null)return;
-  h.title=n||h.title;
-  if(String(who).trim().toUpperCase()==="ALL")h.childId="all";
-  else{
-    const c=data.children.find(c=>c.name.toLowerCase()===String(who).trim().toLowerCase());
-    if(c)h.childId=c.id;
-  }
-  h.days=f==="2"?[...WEEK]:f==="3"?[...WKND]:[...ALL];
-  save();
-}
-function delHabit(id){
-  if(confirm("Supprimer cette petite habitude?")){
-    data.habits=data.habits.filter(x=>x.id!==id);
-    save();
-  }
-}
-function addPenalty(){
-  const c=child(document.querySelector("#penaltyChild").value);
-  const requested=Math.max(1,Number(document.querySelector("#penaltyPoints").value||0));
-  const reason=document.querySelector("#penaltyReason").value.trim();
-  if(!c)return;
-  if(!reason)return toast("Écris la raison");
-  const actual=Math.min(Number(c.points||0),requested);
-  if(actual<=0)return toast(`${c.name} n'a aucun point à retirer`);
-  if(!confirm(`Retirer ${actual} point(s) à ${c.name} ?\nRaison : ${reason}`))return;
-  c.points-=actual;
-  data.pointAdjustments.push({
-    id:uid("adj"),type:"penalty",childId:c.id,amount:-actual,reason,createdAt:now()
-  });
-  save();
-  toast(`${actual} point(s) retiré(s) à ${c.name}`);
-}
-function undoPenalty(id){
-  const x=data.pointAdjustments.find(a=>a.id===id);
-  if(!x||x.undoneAt)return;
-  const c=child(x.childId);
-  if(c)c.points+=Math.abs(Number(x.amount||0));
-  x.undoneAt=now();
-  save();
-  toast("Retrait de points annulé ✅");
-}
-
-function addReward(){
-  const title=document.querySelector("#rTitle").value.trim();
-  if(!title)return toast("Écris la récompense");
-  data.rewards.push({
-    id:uid("r"),
-    title,
-    emoji:document.querySelector("#rEmoji").value||"🎁",
-    cost:Math.max(0,Number(document.querySelector("#rCost").value||0)),
-    monthlyLimit:document.querySelector("#rLimit").value==="monthly"
-  });
-  save();
-}
-function editReward(id){
-  let r=data.rewards.find(x=>x.id===id);if(!r)return;
-  let n=prompt("Récompense :",r.title);if(n===null)return;
-  let c=prompt("Coût en étoiles :",r.cost);if(c===null)return;
-  let l=prompt("Limite : 1 = sans limite, 2 = maximum 1 fois par mois",r.monthlyLimit?"2":"1");
-  if(l===null)return;
-  r.title=n||r.title;
-  r.cost=Math.max(0,Number(c)||0);
-  r.monthlyLimit=String(l).trim()==="2";
-  save();
-}
-function delReward(id){
-  if(confirm("Supprimer cette récompense?")){
-    data.rewards=data.rewards.filter(x=>x.id!==id);
-    save();
-  }
-}
 function editChild(id){
-  let c=child(id),
-      n=prompt("Nom :",c.name);if(n===null)return;
-  let a=prompt("Avatar emoji :",c.avatar);if(a===null)return;
-  let p=prompt("Points actuels :",c.points);if(p===null)return;
-  c.name=n||c.name;
-  c.avatar=a||c.avatar;
-  c.points=Math.max(0,Number(p)||0);
-  save();
-}
-function changePin(){
-  let p=prompt("Nouveau NIP 4 chiffres :",data.parentPin);
-  if(p===null)return;
-  if(/^\d{4}$/.test(p)){data.parentPin=p;save()}
-  else toast("4 chiffres requis");
+ const c=child(id);if(!c)return;
+ const n=prompt("Nom :",c.name);if(n===null)return;
+ const a=prompt("Emoji :",c.avatar);if(a===null)return;
+ c.name=n.trim()||c.name;c.avatar=a.trim()||c.avatar;save();
 }
 
-/* ===== Cloud ===== */
+function familyView(){
+ const kids='<div class="card"><h2>👧👦 Enfants</h2>'+data.children.map(c=>'<div class="event"><div class="emoji">'+c.avatar+'</div><div class="grow"><div class="title">'+esc(c.name)+'</div></div><button class="btn secondary" onclick="editChild(\''+c.id+'\')">Modifier</button></div>').join("")+'</div>';
+ if(profile.token)return kids+'<div class="card"><h2>☁️ Famille synchronisée</h2><div class="notice">Les comportements, consignes, punitions et bilans sont partagés entre vos appareils.</div><div class="code">'+esc(profile.joinCode)+'</div><div class="small" style="text-align:center">Code famille</div><p><b>Appareil :</b> '+esc(profile.memberName)+'</p><button class="btn big secondary" onclick="pullCloud(true)">🔄 Synchroniser</button><button class="btn big danger" onclick="leaveFamily()">Déconnecter cet appareil</button></div>';
+ return kids+'<div class="card cloud"><h2>☁️ Créer le partage</h2><input id="memberName" placeholder="Ton nom, ex. Francis"><button class="btn big primary" onclick="createFamily()">🏠 Créer ma famille</button></div>'+
+ '<div class="card cloud"><h2>🔗 Rejoindre une famille</h2><input id="joinName" placeholder="Ex. Maman"><input id="joinCode" placeholder="CODE FAMILLE"><button class="btn big success" onclick="joinFamily()">Rejoindre</button><button class="btn big secondary" onclick="testServer()">🧪 Tester le serveur</button></div>';
+}
+
 function apiBase(){return API_DEFAULT}
-async function parseResponse(r){
-  let j={};try{j=await r.json()}catch{}
-  if(!r.ok){
-    let e=new Error(j.error||("Erreur "+r.status));
-    e.status=r.status;e.data=j;throw e;
-  }
-  return j;
-}
+async function parseResponse(r){let j={};try{j=await r.json()}catch{}if(!r.ok){const e=new Error(j.error||("Erreur "+r.status));e.status=r.status;e.data=j;throw e}return j}
 async function api(path,opt={}){
-  const url=apiBase()+path,method=opt.method||"GET";
-  const headers={Accept:"application/json",...(opt.headers||{})};
-  if(opt.body)headers["Content-Type"]=profile.token?"application/json":"text/plain;charset=UTF-8";
-  if(profile.token)headers.Authorization="Bearer "+profile.token;
-  try{
-    const r=await fetch(url,{
-      method,body:opt.body,headers,mode:"cors",cache:"no-store",redirect:"follow"
-    });
-    if(r.status===405&&(path==="/api/family/join"||path==="/api/family/create"))
-      return await xhrApi(path,opt);
-    return await parseResponse(r);
-  }catch(e){
-    if((path==="/api/family/join"||path==="/api/family/create")&&e.status!==404)
-      return await xhrApi(path,opt);
-    throw e;
-  }
+ const headers={Accept:"application/json",...(opt.headers||{})};
+ if(opt.body)headers["Content-Type"]=profile.token?"application/json":"text/plain;charset=UTF-8";
+ if(profile.token)headers.Authorization="Bearer "+profile.token;
+ const r=await fetch(apiBase()+path,{method:opt.method||"GET",body:opt.body,headers,mode:"cors",cache:"no-store",redirect:"follow"});
+ return parseResponse(r);
 }
-function xhrApi(path,opt={}){
-  return new Promise((resolve,reject)=>{
-    const x=new XMLHttpRequest();
-    x.open(opt.method||"GET",apiBase()+path,true);
-    x.setRequestHeader("Accept","application/json");
-    if(opt.body)x.setRequestHeader("Content-Type",profile.token?"application/json":"text/plain;charset=UTF-8");
-    if(profile.token)x.setRequestHeader("Authorization","Bearer "+profile.token);
-    x.onload=()=>{
-      let j={};try{j=JSON.parse(x.responseText||"{}")}catch{}
-      if(x.status>=200&&x.status<300)resolve(j);
-      else{
-        let e=new Error(j.error||("Erreur "+x.status));
-        e.status=x.status;e.data=j;reject(e);
-      }
-    };
-    x.onerror=()=>reject(new Error("Connexion au serveur impossible"));
-    x.send(opt.body||null);
-  });
-}
-async function testServer(){
-  try{
-    let j=await api("/api/health");
-    toast(j.ok?"Serveur OK ✅":"Serveur répond");
-  }catch(e){toast("Serveur : "+e.message)}
-}
+async function testServer(){try{const j=await api("/api/health");toast(j.ok?"Serveur OK ✅":"Serveur répond")}catch(e){toast("Serveur : "+e.message)}}
 async function createFamily(){
-  profile.apiUrl=API_DEFAULT;
-  profile.memberName=document.querySelector("#memberName").value.trim()||"Parent";
-  try{
-    let j=await api("/api/family/create",{
-      method:"POST",
-      body:JSON.stringify({familyName:"Mission Maison",memberName:profile.memberName,timezone:"America/Toronto"})
-    });
-    Object.assign(profile,{
-      token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,
-      cloudVersion:j.version||0,apiUrl:API_DEFAULT
-    });
-    saveProf();dirty=true;await pushCloud();render();toast("Famille créée ✅");
-  }catch(e){toast("Impossible : "+e.message)}
+ profile.memberName=document.querySelector("#memberName").value.trim()||"Parent";
+ try{
+  const j=await api("/api/family/create",{method:"POST",body:JSON.stringify({familyName:"Mission Maison",memberName:profile.memberName,timezone:"America/Toronto"})});
+  Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:j.version||0});
+  saveProf();dirty=true;await pushCloud();render();toast("Famille créée ✅");
+ }catch(e){toast("Impossible : "+e.message)}
 }
 async function joinFamily(){
-  profile.apiUrl=API_DEFAULT;
-  profile.memberName=document.querySelector("#joinName").value.trim()||"Appareil";
-  let code=document.querySelector("#joinCode").value.trim().toUpperCase();
-  if(!code)return toast("Entre le code famille");
-  try{
-    let j=await api("/api/family/join",{
-      method:"POST",body:JSON.stringify({joinCode:code,memberName:profile.memberName})
-    });
-    Object.assign(profile,{
-      token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,
-      cloudVersion:0,apiUrl:API_DEFAULT
-    });
-    saveProf();dirty=false;await pullCloud(true);view="kids";render();toast("Famille rejointe ✅");
-  }catch(e){toast("Impossible : "+e.message)}
+ profile.memberName=document.querySelector("#joinName").value.trim()||"Appareil";
+ const code=document.querySelector("#joinCode").value.trim().toUpperCase();if(!code)return toast("Entre le code famille");
+ try{
+  const j=await api("/api/family/join",{method:"POST",body:JSON.stringify({joinCode:code,memberName:profile.memberName})});
+  Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:0});
+  saveProf();dirty=false;await pullCloud(true);view="today";render();toast("Famille rejointe ✅");
+ }catch(e){toast("Impossible : "+e.message)}
 }
 async function pushCloud(){
-  if(!profile.token||busy)return;
-  busy=true;
-  try{
-    let j=await api("/api/state",{
-      method:"PUT",
-      body:JSON.stringify({version:Number(profile.cloudVersion||0),data})
-    });
-    profile.cloudVersion=Number(j.version||0);
-    saveProf();dirty=false;render();
-  }catch(e){
-    if(e.status===409&&e.data?.data){
-      data=normalize(e.data.data);
-      profile.cloudVersion=Number(e.data.version||0);
-      saveProf();dirty=false;
-      localStorage.setItem(STORE,JSON.stringify(data));
-      render();
-      toast("Une autre modification est arrivée — réessaie");
-    }else toast("Sync à vérifier");
-  }finally{busy=false}
+ if(!profile.token||busy)return;busy=true;
+ try{
+  const j=await api("/api/state",{method:"PUT",body:JSON.stringify({version:Number(profile.cloudVersion||0),data})});
+  profile.cloudVersion=Number(j.version||0);saveProf();dirty=false;
+ }catch(e){
+  if(e.status===409&&e.data?.data){data=normalize(e.data.data);profile.cloudVersion=Number(e.data.version||0);saveProf();dirty=false;localStorage.setItem(STORE,JSON.stringify(data));render();toast("Une autre modification est arrivée — réessaie")}
+  else toast("Sync à vérifier");
+ }finally{busy=false}
 }
 async function pullCloud(force=false){
-  if(!profile.token||busy||(dirty&&!force))return;
-  busy=true;
-  try{
-    let j=await api("/api/state");
-    if(j.data?.schemaVersion===2){
-      const before=JSON.stringify(j.data);
-      data=normalize(j.data);
-      profile.cloudVersion=Number(j.version||0);
-      saveProf();
-      localStorage.setItem(STORE,JSON.stringify(data));
-      render();
-
-      // Si la nouvelle récompense 15 $ a été ajoutée par normalize(),
-      // on la pousse au nuage automatiquement.
-      if(JSON.stringify(data)!==before){
-        dirty=true;
-        setTimeout(()=>pushCloud(),50);
-      }
-    }
-  }catch(e){
-    if(force)toast("Sync impossible : "+e.message);
-  }finally{busy=false}
+ if(!profile.token||busy||(dirty&&!force))return;busy=true;
+ try{
+  const j=await api("/api/state");
+  if(j.data?.schemaVersion===2){data=normalize(j.data);profile.cloudVersion=Number(j.version||0);saveProf();localStorage.setItem(STORE,JSON.stringify(data));render()}
+ }catch(e){if(force)toast("Sync impossible : "+e.message)}
+ finally{busy=false}
 }
-function leave(){
-  if(confirm("Déconnecter cet appareil?")){
-    profile={apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",
-      joinCode:"",cloudVersion:0,pushEnabled:false};
-    saveProf();render();
-  }
+function leaveFamily(){
+ if(confirm("Déconnecter cet appareil?")){
+  profile={apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",joinCode:"",cloudVersion:0};
+  saveProf();render();
+ }
 }
 
-/* ===== Notifications ===== */
-function ensureOneSignal(){
-  if(oneSignalInitPromise)return oneSignalInitPromise;
-  oneSignalInitPromise=(async()=>{
-    const appId=ONESIGNAL_APP_ID;
-    if(!appId)throw new Error("Notifications pas encore configurées");
-    return await new Promise((resolve,reject)=>{
-      window.OneSignalDeferred=window.OneSignalDeferred||[];
-      window.OneSignalDeferred.push(async OneSignal=>{
-        try{
-          if(!oneSignalReady){
-            const swUrl=new URL("OneSignalSDKWorker.js",location.href);
-            const swPath=swUrl.pathname.replace(/^\//,"");
-            const swScope=new URL("./push/onesignal/",location.href).pathname;
-            try{
-              await OneSignal.init({
-                appId,
-                serviceWorkerPath:swPath,
-                serviceWorkerParam:{scope:swScope}
-              });
-            }catch(e){
-              if(!/already initialized/i.test(String(e?.message||e)))throw e;
-            }
-            oneSignalReady=true;
-            oneSignalSdk=OneSignal;
-          }
-          resolve(oneSignalSdk||OneSignal);
-        }catch(e){
-          oneSignalInitPromise=null;
-          reject(e);
-        }
-      });
-    });
-  })();
-  return oneSignalInitPromise;
-}
-async function initParentPush(askPermission=true){
-  if(!profile.token||!profile.familyId)return toast("Connecte d'abord cet appareil à la famille");
-  try{
-    const OneSignal=await ensureOneSignal();
-    if(askPermission&&!OneSignal.Notifications.permission)
-      await OneSignal.Notifications.requestPermission();
-
-    if(!OneSignal.Notifications.permission){
-      profile.pushEnabled=false;saveProf();render();
-      if(askPermission)toast("Notifications non autorisées sur cet appareil");
-      return;
-    }
-
-    await OneSignal.User.addTags({
-      mission_family:String(profile.familyId),mission_parent:"1"
-    });
-    profile.pushEnabled=true;saveProf();render();
-    if(askPermission)toast("Notifications parents activées 🔔");
-  }catch(e){
-    console.warn("Mission Maison OneSignal",e);
-    if(askPermission)toast("Notifications : "+(e?.message||"activation impossible"));
-  }
-}
-async function notifyTaskFinished(t){
-  if(!profile.token||!t)return;
-  const c=child(t.childId);
-  try{
-    await api("/api/mission/task-finished",{
-      method:"POST",
-      body:JSON.stringify({childName:c?.name||"Un enfant",taskTitle:t.title||"une mission"})
-    });
-  }catch(e){console.warn("Notification mission",e)}
-}
-
-function family(){
-  if(profile.token)return `<div class="card">
-    <h2>☁️ Famille synchronisée</h2>
-    <div class="notice">Même tâches, points et confirmations sur tous les appareils.</div>
-    <div class="code">${esc(profile.joinCode)}</div>
-    <div class="small" style="text-align:center">Code à mettre sur les autres appareils</div>
-    <p><b>Appareil :</b> ${esc(profile.memberName)}</p>
-    <button class="btn big secondary" onclick="pullCloud(true)">🔄 Synchroniser</button>
-    <button class="btn big ${profile.pushEnabled?"success":"primary"}" onclick="initParentPush(true)">
-      ${profile.pushEnabled?"🔔 Notifications parents activées ✅":"🔔 Activer les notifications parents"}
-    </button>
-    <p class="small">À activer seulement sur les téléphones des parents. Pas besoin sur la tablette des enfants.</p>
-    <button class="btn big danger" onclick="leave()">Déconnecter cet appareil</button>
-  </div>`;
-
-  return `<div class="card cloud">
-    <h2>☁️ Créer le partage</h2>
-    <div class="notice">Le serveur est déjà configuré automatiquement. Tu n’as plus besoin de copier une adresse.</div>
-    <input id="memberName" placeholder="Ton nom, ex. Francis">
-    <button class="btn big primary" onclick="createFamily()">🏠 Créer ma famille Mission Maison</button>
-  </div>
-  <div class="card cloud">
-    <h2>🔗 Rejoindre une famille</h2>
-    <div class="notice">Écris seulement le nom de l’appareil et le code famille.</div>
-    <input id="joinName" placeholder="Ex. Maman ou Tablette enfants">
-    <input id="joinCode" placeholder="CODE FAMILLE">
-    <button class="btn big success" onclick="joinFamily()">Rejoindre</button>
-    <button class="btn big secondary" onclick="testServer()">🧪 Tester le serveur</button>
-  </div>`;
-}
-
-function confetti(){
-  for(let i=0;i<16;i++){
-    let s=document.createElement("span");
-    s.textContent=["⭐","🎉","✨","🏆"][Math.floor(Math.random()*4)];
-    s.style.cssText=`position:fixed;left:${10+Math.random()*80}vw;top:-30px;font-size:${18+Math.random()*17}px;z-index:99999;transition:transform 1.1s linear,opacity 1.1s`;
-    document.body.appendChild(s);
-    requestAnimationFrame(()=>{
-      s.style.transform=`translateY(${55+Math.random()*80}vh) rotate(${Math.random()*500}deg)`;
-      s.style.opacity="0";
-    });
-    setTimeout(()=>s.remove(),1200);
-  }
-}
-
-window.addEventListener("beforeinstallprompt",e=>{
-  e.preventDefault();installPrompt=e;render();
-});
-window.addEventListener("appinstalled",()=>{
-  installPrompt=null;toast("Mission Maison installée ✅");render();
-});
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;render()});
+window.addEventListener("appinstalled",()=>{installPrompt=null;toast("Mission Maison installée ✅");render()});
 async function installApp(){
-  if(!installPrompt){
-    toast("Menu du navigateur → Installer l’application / Ajouter à l’écran d’accueil");
-    return;
-  }
-  installPrompt.prompt();
-  try{await installPrompt.userChoice}catch{}
-  installPrompt=null;render();
+ if(!installPrompt)return toast("Menu du navigateur → Ajouter à l’écran d’accueil");
+ installPrompt.prompt();try{await installPrompt.userChoice}catch{}installPrompt=null;render();
 }
-function isStandalone(){
-  return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;
-}
+function isStandalone(){return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true}
 
 function render(){
-  if(!child(active))active=data.children[0]?.id;
-  document.querySelector("#app").innerHTML=`<div class="wrap">
-    <div class="top">
-      <div>
-        <div class="brand">🏠⚡ MISSION MAISON</div>
-        <div class="sub">Les corvées deviennent des missions!</div>
-        <div class="sync">${profile.token?`☁️ ${esc(profile.memberName)} · ${esc(profile.joinCode)}`:"☁️ Partage à activer"}</div>
-      </div>
-      ${tabs()}
-    </div>
-
-    ${!isStandalone()?`<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>`:""}
-
-    ${view==="kids"?kids():view==="parents"?parents():family()}
-
-    <div class="footer">Mission Maison · ${profile.token?"synchronisée ✅":"locale"} · v2.10</div>
-  </div>`;
+ if(!child(active))active=data.children[0]?.id;
+ const body=view==="today"?todayView():view==="history"?historyView():view==="week"?weekView():familyView();
+ document.querySelector("#app").innerHTML='<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Suivi simple des comportements — parents seulement</div><div class="sync">'+(profile.token?"☁️ "+esc(profile.memberName)+" · "+esc(profile.joinCode):"☁️ Partage à activer")+'</div></div>'+tabs()+'</div>'+
+ (!isStandalone()?'<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>':'')+body+
+ '<div class="footer">Mission Maison · '+(profile.token?"synchronisée ✅":"locale")+' · v3.0 COMPORTEMENT</div></div>';
+ tickTimers();
 }
 
-localStorage.setItem(STORE,JSON.stringify(data));
-saveProf();
-render();
-
+localStorage.setItem(STORE,JSON.stringify(data));saveProf();render();
+setInterval(tickTimers,1000);
 if(profile.token)pullCloud(true);
-if(profile.token&&profile.pushEnabled)setTimeout(()=>initParentPush(false),1200);
-setInterval(()=>{
-  if(profile.token&&document.visibilityState==="visible")pullCloud();
-},5000);
-document.addEventListener("visibilitychange",()=>{
-  if(document.visibilityState==="visible"&&profile.token)pullCloud(true);
-});
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-}
+setInterval(()=>{if(profile.token&&document.visibilityState==="visible")pullCloud()},7000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){tickTimers();if(profile.token)pullCloud(true)}});
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 </script>
 </body>
 </html>
