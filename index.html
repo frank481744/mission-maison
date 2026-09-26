@@ -138,7 +138,7 @@ function loadProf(){
 }
 
 let data=load(),profile=loadProf(),view="today",active=localStorage.getItem(ACTIVE)||data.children[0].id;
-let historyDate=day(),weekAnchor=day(),monthAnchor=monthKey(),busy=false,dirty=false,syncTimer=null,installPrompt=null,audioCtx=null,alarmHandled={};
+let historyDate=day(),weekAnchor=day(),monthAnchor=monthKey(),busy=false,dirty=false,syncTimer=null,installPrompt=null,audioCtx=null,alarmHandled={},wakeLock=null,alarmTimers=[];
 let undoStack=[],parentUnlocked=sessionStorage.getItem("missionParentUnlocked")==="1",speech=null;
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 function toast(s){const e=document.querySelector("#toast");if(!e)return;e.textContent=s;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),2800)}
@@ -263,114 +263,60 @@ function coachPanel(){
 }
 
 function ensureAudio(){
- try{
-  audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state==="suspended")audioCtx.resume();
- }catch{}
+ try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume()}catch{}
 }
 function playTone(freq=880,duration=420,delay=0){
  ensureAudio();
  try{
   const t=setTimeout(()=>{
-   const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-   o.connect(g);g.connect(audioCtx.destination);
-   o.type="sine";o.frequency.value=freq;g.gain.value=.18;
-   o.start();
-   g.gain.setValueAtTime(.18,audioCtx.currentTime);
-   g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration/1000);
+   const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);
+   o.type="sine";o.frequency.value=freq;g.gain.value=.18;o.start();
+   g.gain.setValueAtTime(.18,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration/1000);
    o.stop(audioCtx.currentTime+duration/1000);
-  },delay);
-  alarmTimers.push(t);
+  },delay);alarmTimers.push(t);
  }catch{}
 }
-function stopAlarmSound(){
- alarmTimers.forEach(clearTimeout);alarmTimers=[];
-}
-function beepSequence(){
- stopAlarmSound();
- [0,650,1300,1950].forEach((d,i)=>playTone(i%2?980:780,500,d));
- try{navigator.vibrate?.([350,180,350,180,700])}catch{}
-}
+function stopAlarmSound(){alarmTimers.forEach(clearTimeout);alarmTimers=[]}
+function beepSequence(){stopAlarmSound();[0,650,1300,1950].forEach((d,i)=>playTone(i%2?980:780,500,d));try{navigator.vibrate?.([350,180,350,180,700])}catch{}}
 async function requestWakeLock(){
- try{
-  if(!("wakeLock" in navigator))return false;
-  if(wakeLock)return true;
-  wakeLock=await navigator.wakeLock.request("screen");
-  wakeLock.addEventListener("release",()=>{wakeLock=null});
-  return true;
- }catch{
-  wakeLock=null;
-  return false;
- }
+ try{if(!("wakeLock" in navigator))return false;if(wakeLock)return true;wakeLock=await navigator.wakeLock.request("screen");wakeLock.addEventListener("release",()=>{wakeLock=null});return true}catch{wakeLock=null;return false}
 }
-async function releaseWakeLock(){
- try{if(wakeLock){await wakeLock.release();wakeLock=null}}catch{wakeLock=null}
-}
+async function releaseWakeLock(){try{if(wakeLock){await wakeLock.release();wakeLock=null}}catch{wakeLock=null}}
 function hasAnyActiveTimer(){return data.punishments.some(p=>p.status==="active")}
-async function syncWakeLock(){
- if(hasAnyActiveTimer() && document.visibilityState==="visible"){
-  await requestWakeLock();
- }else if(!hasAnyActiveTimer()){
-  await releaseWakeLock();
- }
-}
+async function syncWakeLock(){if(hasAnyActiveTimer()&&document.visibilityState==="visible")await requestWakeLock();else if(!hasAnyActiveTimer())await releaseWakeLock()}
 function alarm(p){
- if(alarmHandled[p.id])return;
- alarmHandled[p.id]=true;
- beepSequence();
- const c=child(p.childId);
- toast("⏰ Punition terminée — "+(c?.name||"Enfant"));
+ if(alarmHandled[p.id])return;alarmHandled[p.id]=true;beepSequence();
+ const c=child(p.childId);toast("⏰ Punition terminée — "+(c?.name||"Enfant"));
  setTimeout(()=>stopAlarmSound(),3200);
 }
 function startPunishment(mins){
- const c=child(active);if(!c)return;
- ensureAudio();
+ const c=child(active);if(!c)return;ensureAudio();
  const reason=(document.querySelector("#punishReason")?.value||"Punition").trim()||"Punition";
- const old=activePunishment(active);
- if(old&&!confirm("Un chrono est déjà actif pour "+c.name+". Le remplacer?"))return;
- if(old){old.status="stopped";old.stoppedAt=now()}
+ const old=activePunishment(active);if(old&&!confirm("Un chrono est déjà actif pour "+c.name+". Le remplacer?"))return;
+ rememberUndo();if(old){old.status="stopped";old.stoppedAt=now()}
  const p={id:uid("pun"),childId:active,date:day(),reason,minutes:mins,startedAt:now(),endAt:new Date(Date.now()+mins*60000).toISOString(),status:"active"};
- data.punishments.push(p);
- data.behaviorEvents.push({id:uid("ev"),childId:active,date:day(),type:"punishment",label:"Punition "+mins+" min — "+reason,icon:"⏱️",score:-2,createdAt:now(),source:"punishment",refId:p.id});
- requestWakeLock();
- save();
- toast("⏱️ Chrono "+mins+" min démarré — écran gardé éveillé");
+ data.punishments.push(p);data.behaviorEvents.push({id:uid("ev"),childId:active,date:day(),type:"punishment",label:"Punition "+mins+" min — "+reason,icon:"⏱️",score:-2,createdAt:now(),source:"punishment",refId:p.id,coach:"general"});
+ requestWakeLock();save();toast("⏱️ Chrono "+mins+" min démarré — écran gardé éveillé");
 }
-function stopPunishment(id){
- const p=data.punishments.find(x=>x.id===id);if(!p||p.status!=="active")return;
- p.status="stopped";p.stoppedAt=now();
- stopAlarmSound();
- save();
- syncWakeLock();
- toast("Chrono arrêté");
-}
-function addPunishTime(id,mins){
- const p=data.punishments.find(x=>x.id===id);if(!p||p.status!=="active")return;
- p.endAt=new Date(new Date(p.endAt).getTime()+mins*60000).toISOString();p.minutes+=mins;save()
-}
+function stopPunishment(id){const p=data.punishments.find(x=>x.id===id);if(!p||p.status!=="active")return;rememberUndo();p.status="stopped";p.stoppedAt=now();stopAlarmSound();save();syncWakeLock();toast("Chrono arrêté")}
+function addPunishTime(id,mins){const p=data.punishments.find(x=>x.id===id);if(!p||p.status!=="active")return;rememberUndo();p.endAt=new Date(new Date(p.endAt).getTime()+mins*60000).toISOString();p.minutes+=mins;save()}
 function remaining(p){return Math.max(0,new Date(p.endAt).getTime()-Date.now())}
 function clock(ms){const s=Math.ceil(ms/1000),m=Math.floor(s/60);return pad(m)+":"+pad(s%60)}
 function timerPanel(){
- const p=activePunishment(active);
- if(!p)return '<div class="notice">Aucun chrono actif pour cet enfant.</div>';
- return '<div class="timerBox"><div class="emoji">⏱️</div><div class="grow"><div class="title">'+esc(p.reason)+'</div><div class="timerClock" data-timer="'+p.id+'">'+clock(remaining(p))+'</div>'+
-  '<div class="small">Punition de '+p.minutes+' min · écran gardé éveillé pendant le chrono</div><div class="actions"><button class="btn secondary" onclick="addPunishTime(\''+p.id+'\',5)">+5 min</button><button class="btn danger" onclick="stopPunishment(\''+p.id+'\')">Arrêter</button></div></div></div>';
+ const p=activePunishment(active);if(!p)return '<div class="notice">Aucun chrono actif pour cet enfant.</div>';
+ return '<div class="timerBox"><div class="emoji">⏱️</div><div class="grow"><div class="title">'+esc(p.reason)+'</div><div class="timerClock" data-timer="'+p.id+'">'+clock(remaining(p))+'</div><div class="small">Punition de '+p.minutes+' min · écran gardé éveillé pendant le chrono</div><div class="actions"><button class="btn secondary" onclick="addPunishTime(\''+p.id+'\',5)">+5 min</button><button class="btn danger" onclick="stopPunishment(\''+p.id+'\')">Arrêter</button></div></div></div>';
 }
 function tickTimers(){
- let changed=false;
- data.punishments.filter(p=>p.status==="active").forEach(p=>{
-  const ms=remaining(p),el=document.querySelector('[data-timer="'+p.id+'"]');if(el)el.textContent=clock(ms);
-  if(ms<=0){
-   p.status="ended";p.endedAt=now();changed=true;
-   if(Date.now()-new Date(p.endAt).getTime()<120000)alarm(p);
-  }
- });
- if(changed){save();syncWakeLock()}
+ let changed=false;data.punishments.filter(p=>p.status==="active").forEach(p=>{const ms=remaining(p),el=document.querySelector('[data-timer="'+p.id+'"]');if(el)el.textContent=clock(ms);if(ms<=0){p.status="ended";p.endedAt=now();changed=true;if(Date.now()-new Date(p.endAt).getTime()<120000)alarm(p)}});if(changed){save();syncWakeLock()}
 }
-function requestTimerAlerts(){
- ensureAudio();
- playTone(880,450,0);
- requestWakeLock().then(ok=>toast(ok?"Son prêt + écran gardé éveillé ✅":"Son prêt ✅"));
+function requestTimerAlerts(){ensureAudio();playTone(880,450,0);requestWakeLock().then(ok=>toast(ok?"Son prêt + écran gardé éveillé ✅":"Son prêt ✅"))}
+function timerButtons(c){return (c.timerPresets||[5,10,15,20]).map(n=>'<button class="btn orange" onclick="startPunishment('+Number(n)+')">'+Number(n)+' min</button>').join("")}
+
+function trendToday(cid){
+ const ev=eventsFor(cid,day()).filter(e=>e.score<0),count={};ev.forEach(e=>{const k=e.type||e.coach||"negative";count[k]=(count[k]||0)+1});
+ const top=Object.entries(count).sort((a,b)=>b[1]-a[1])[0];if(!top||top[1]<3)return"";
+ const labels={repeat:"Il a fallu répéter",argue:"Obstination",disrespect:"Manque de respect",bad:"Mauvais comportement",instruction_many:"Consignes après plusieurs rappels",instruction_notdone:"Consignes non faites",instruction_refusal:"Refus de consigne",punishment:"Punitions"};
+ return '<div class="notice warn">⚠️ <b>Tendance aujourd’hui :</b> '+(labels[top[0]]||"Même difficulté")+' '+top[1]+' fois. Ça vaut la peine d’utiliser une consigne très claire et une conséquence constante plutôt que d’ajouter plusieurs avertissements.</div>';
 }
 function goalProgress(cid,start,end){
  const c=child(cid),ev=data.behaviorEvents.filter(e=>e.childId===cid&&e.date>=start&&e.date<=end),k=c?.goalKey||"none";
@@ -481,7 +427,7 @@ function isStandalone(){return window.matchMedia("(display-mode: standalone)").m
 function render(){
  if(!child(active))active=data.children[0]?.id;
  const body=view==="today"?todayView():view==="history"?historyView():view==="week"?weekView():view==="month"?monthView():familyView();
- document.querySelector("#app").innerHTML='<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Comportements, consignes et aide parent — simple et rapide</div><div class="sync">'+(profile.token?"☁️ "+esc(profile.memberName)+" · "+esc(profile.joinCode):"☁️ Partage à activer")+'</div></div>'+tabs()+'</div>'+(!isStandalone()?'<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>':'')+body+'<div class="footer">Mission Maison · '+(profile.token?"synchronisée ✅":"locale")+' · v3.2 COACH PARENT</div></div><button id="undoBtn" class="undo" onclick="undoLast()" '+(!undoStack.length?'disabled':'')+'>↩️ Annuler</button>';
+ document.querySelector("#app").innerHTML='<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Comportements, consignes et aide parent — simple et rapide</div><div class="sync">'+(profile.token?"☁️ "+esc(profile.memberName)+" · "+esc(profile.joinCode):"☁️ Partage à activer")+'</div></div>'+tabs()+'</div>'+(!isStandalone()?'<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>':'')+body+'<div class="footer">Mission Maison · '+(profile.token?"synchronisée ✅":"locale")+' · v3.2.1 COACH PARENT</div></div><button id="undoBtn" class="undo" onclick="undoLast()" '+(!undoStack.length?'disabled':'')+'>↩️ Annuler</button>';
  tickTimers();renderUndoState();
 }
 
