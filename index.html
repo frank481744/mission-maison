@@ -142,7 +142,26 @@ function loadProf(){
 let data=load(),profile=loadProf(),view="today",active=localStorage.getItem(ACTIVE)||data.children[0].id;
 let historyDate=day(),weekAnchor=day(),monthAnchor=monthKey(),busy=false,dirty=false,syncTimer=null,installPrompt=null,audioCtx=null,alarmHandled={},wakeLock=null,alarmTimers=[];
 let undoStack=[],parentUnlocked=sessionStorage.getItem("missionParentUnlocked")==="1",speech=null;
+const INSTRUCTION_DRAFT_KEY="missionMaisonInstructionDraftV1";
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+function blankInstructionDraft(){return {title:"",kids:[active],deadlineMode:"none",clock:"20:00",consequence:"",edited:false}}
+function loadInstructionDraft(){
+ try{const d=JSON.parse(sessionStorage.getItem(INSTRUCTION_DRAFT_KEY)||"null");if(d&&typeof d==="object")return {...blankInstructionDraft(),...d,kids:Array.isArray(d.kids)&&d.kids.length?d.kids:[active]}}catch{}
+ return blankInstructionDraft();
+}
+let instructionDraft=loadInstructionDraft();
+function storeInstructionDraft(){try{sessionStorage.setItem(INSTRUCTION_DRAFT_KEY,JSON.stringify(instructionDraft))}catch{}}
+function captureInstructionDraft(){
+ const title=document.querySelector("#instructionText");if(!title)return;
+ const kids=[...document.querySelectorAll(".instructionKid:checked")].map(e=>e.value);
+ const deadlineMode=document.querySelector("#instructionDeadlineMode")?.value||"none";
+ const clock=document.querySelector("#instructionClock")?.value||"20:00";
+ const consequence=document.querySelector("#instructionConsequence")?.value||"";
+ instructionDraft={title:title.value||"",kids:kids.length?kids:[active],deadlineMode,clock,consequence,edited:true};
+ storeInstructionDraft();
+}
+function clearInstructionDraft(){instructionDraft=blankInstructionDraft();try{sessionStorage.removeItem(INSTRUCTION_DRAFT_KEY)}catch{}}
+function isEditingField(){const el=document.activeElement;return !!el&&!!el.matches&&el.matches("input,textarea,select")}
 function toast(s){const e=document.querySelector("#toast");if(!e)return;e.textContent=s;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),2800)}
 function rememberUndo(){undoStack.push(JSON.stringify(data));if(undoStack.length>10)undoStack.shift();renderUndoState()}
 function undoLast(){if(!undoStack.length)return toast("Rien à annuler");data=normalize(JSON.parse(undoStack.pop()));dirty=true;save();toast("Dernière action annulée ↩️")}
@@ -233,11 +252,13 @@ function updateInstructionTimeUI(){
  if(lbl)lbl.textContent=mode==="bedtime"?"Heure du coucher":"Heure limite";
 }
 function addInstruction(){
+ captureInstructionDraft();
  const input=document.querySelector("#instructionText"),title=(input?.value||"").trim();if(!title)return toast("Écris la consigne");
  const kids=selectedInstructionKids();if(!kids.length)return toast("Choisis au moins un enfant");
  const consequence=instructionConsequenceValue(),dl=instructionDeadlineFromUI();rememberUndo();
  const created=now();
  data.instructions.push({id:uid("ins"),childId:kids[0],childIds:kids,date:day(),title,status:"pending",createdAt:created,minutes:dl.minutes,deadlineAt:dl.deadlineAt,deadlineType:dl.deadlineType,deadlineLabel:dl.deadlineLabel,consequence});
+ clearInstructionDraft();
  save();toast("Consigne ajoutée à "+kids.length+" enfant"+(kids.length>1?"s":""));
 }
 function startPunishmentForChild(cid,mins,reason,scoreEvent=true){
@@ -413,17 +434,20 @@ function dayVerdict(cid,dateStr){
 function isClosed(cid,dateStr){return data.dayClosures.find(x=>x.childId===cid&&x.date===dateStr)}
 
 function instructionKidPicker(){
- return '<div class="small" style="margin-top:9px"><b>Pour qui?</b> — tu peux choisir plusieurs enfants</div><div class="kidPick">'+data.children.map(c=>'<label class="kidCheck"><input class="instructionKid" type="checkbox" value="'+c.id+'" '+(c.id===active?'checked':'')+'> '+c.avatar+' '+esc(c.name)+'</label>').join("")+'</div>';
+ const picked=(instructionDraft?.kids?.length?instructionDraft.kids:[active]);
+ return '<div class="small" style="margin-top:9px"><b>Pour qui?</b> — tu peux choisir plusieurs enfants</div><div class="kidPick">'+data.children.map(c=>'<label class="kidCheck"><input class="instructionKid" type="checkbox" value="'+c.id+'" '+(picked.includes(c.id)?'checked':'')+' onchange="captureInstructionDraft()"> '+c.avatar+' '+esc(c.name)+'</label>').join("")+'</div>';
 }
 function instructionOptions(){
- return '<div class="form"><select id="instructionDeadlineMode" onchange="updateInstructionTimeUI()"><option value="none">∞ Aucun temps limite</option><option value="mins:5">5 min</option><option value="mins:10">10 min</option><option value="mins:15">15 min</option><option value="mins:20">20 min</option><option value="mins:30">30 min</option><option value="mins:45">45 min</option><option value="mins:60">1 h</option><option value="mins:120">2 h</option><option value="mins:180">3 h</option><option value="bedtime">🌙 Avant le coucher</option><option value="eod">📅 Avant la fin de la journée</option><option value="clock">🕐 Choisir une heure</option></select><select id="instructionConsequence"><option value="">⚖️ Aucune conséquence prévue</option><option>Punition 5 min</option><option>Punition 10 min</option><option>Punition 15 min</option><option>Punition 20 min</option><option>Pas d’écran 15 min</option><option>Pas d’écran 30 min</option><option>Pas d’écran 1 h</option><option>À terminer avant loisir</option><option value="custom">Autre...</option></select></div><div id="instructionClockWrap" class="form" style="display:none;margin-top:8px"><label class="small"><span id="instructionClockLabel">Heure limite</span><input id="instructionClock" type="time" value="20:00"></label></div>';
+ const d=instructionDraft||blankInstructionDraft(),sel=v=>d.deadlineMode===v?' selected':'',cons=v=>d.consequence===v?' selected':'';
+ const showClock=d.deadlineMode==="bedtime"||d.deadlineMode==="clock";
+ return '<div class="form"><select id="instructionDeadlineMode" onchange="updateInstructionTimeUI();captureInstructionDraft()"><option value="none"'+sel('none')+'>∞ Aucun temps limite</option><option value="mins:5"'+sel('mins:5')+'>5 min</option><option value="mins:10"'+sel('mins:10')+'>10 min</option><option value="mins:15"'+sel('mins:15')+'>15 min</option><option value="mins:20"'+sel('mins:20')+'>20 min</option><option value="mins:30"'+sel('mins:30')+'>30 min</option><option value="mins:45"'+sel('mins:45')+'>45 min</option><option value="mins:60"'+sel('mins:60')+'>1 h</option><option value="mins:120"'+sel('mins:120')+'>2 h</option><option value="mins:180"'+sel('mins:180')+'>3 h</option><option value="bedtime"'+sel('bedtime')+'>🌙 Avant le coucher</option><option value="eod"'+sel('eod')+'>📅 Avant la fin de la journée</option><option value="clock"'+sel('clock')+'>🕐 Choisir une heure</option></select><select id="instructionConsequence" onchange="captureInstructionDraft()"><option value=""'+cons('')+'>⚖️ Aucune conséquence prévue</option><option'+cons('Punition 5 min')+'>Punition 5 min</option><option'+cons('Punition 10 min')+'>Punition 10 min</option><option'+cons('Punition 15 min')+'>Punition 15 min</option><option'+cons('Punition 20 min')+'>Punition 20 min</option><option'+cons('Pas d’écran 15 min')+'>Pas d’écran 15 min</option><option'+cons('Pas d’écran 30 min')+'>Pas d’écran 30 min</option><option'+cons('Pas d’écran 1 h')+'>Pas d’écran 1 h</option><option'+cons('À terminer avant loisir')+'>À terminer avant loisir</option><option value="custom"'+cons('custom')+'>Autre...</option></select></div><div id="instructionClockWrap" class="form" style="display:'+(showClock?'block':'none')+';margin-top:8px"><label class="small"><span id="instructionClockLabel">'+(d.deadlineMode==='bedtime'?'Heure du coucher':'Heure limite')+'</span><input id="instructionClock" type="time" value="'+esc(d.clock||'20:00')+'" oninput="captureInstructionDraft()" onchange="captureInstructionDraft()"></label></div>';
 }
 
 function todayView(){
  const c=child(active)||data.children[0],ins=instructionsFor(c.id,day()),ev=eventsFor(c.id,day()),closed=isClosed(c.id,day());
  return childCards()+
  '<div class="card"><div class="stat"><h2>'+c.avatar+' '+esc(c.name)+'</h2><span class="pill">Bilan du jour '+(scoreFor(c.id,day())>=0?"+":"")+scoreFor(c.id,day())+'</span></div>'+goalCard(c)+(closed?'<div class="notice good">🌙 Journée fermée à '+fmtTime(closed.closedAt)+' — tu peux quand même corriger puis la refermer.</div>':'')+trendToday(c.id)+'<h3>⚡ Noter vite</h3>'+quickButtons()+'</div>'+ 
- '<div class="card"><h2>📋 Consigne donnée</h2><div class="notice">Tu peux donner la même consigne à plusieurs enfants, choisir un temps limite et prévoir la conséquence si elle n’est pas faite.</div><div class="form"><input id="instructionText" list="suggestions" placeholder="Ex. Ranger la chambre"><datalist id="suggestions"><option value="Ranger la chambre"><option value="Ranger ses choses"><option value="Mettre la table"><option value="Prendre sa douche"><option value="Faire ses devoirs"></datalist><button class="btn primary" onclick="addInstruction()">Ajouter la consigne</button></div>'+instructionKidPicker()+instructionOptions()+ins.map(instructionRow).join("")+'</div>'+ 
+ '<div class="card"><h2>📋 Consigne donnée</h2><div class="notice">Tu peux donner la même consigne à plusieurs enfants, choisir un temps limite et prévoir la conséquence si elle n’est pas faite.</div><div class="form"><input id="instructionText" list="suggestions" placeholder="Ex. Ranger la chambre" value="'+esc(instructionDraft?.title||'')+'" oninput="captureInstructionDraft()"><datalist id="suggestions"><option value="Ranger la chambre"><option value="Ranger ses choses"><option value="Mettre la table"><option value="Prendre sa douche"><option value="Faire ses devoirs"></datalist><button class="btn primary" onclick="addInstruction()">Ajouter la consigne</button></div>'+instructionKidPicker()+instructionOptions()+ins.map(instructionRow).join("")+'</div>'+ 
  '<div class="card"><h2>⏱️ Punition avec chrono</h2><div class="form"><select id="punishReason"><option>Refus / obstination</option><option>N’écoute pas / il faut répéter</option><option>Manque de respect</option><option>Frappe / agressivité</option><option>Crise / colère</option><option>Conflit écran</option><option>Consigne non faite</option><option>Autre...</option></select><button class="btn secondary" onclick="requestTimerAlerts()">🔊 Tester son / écran</button></div><div class="actions">'+timerButtons(c)+'</div>'+timerPanel()+'</div>'+ 
  '<div class="card"><h2>🎙️ Note rapide</h2><div class="form"><input id="noteText" placeholder="Ex. A aidé son frère à ranger"><button class="btn secondary" onclick="dictateNote()">🎙️ Dicter</button><button class="btn primary" onclick="addTypedNote()">Ajouter note</button></div></div>'+ 
  coachPanel()+
@@ -492,7 +516,7 @@ async function testServer(){try{const j=await api("/api/health");toast(j.ok?"Ser
 async function createFamily(){profile.memberName=document.querySelector("#memberName").value.trim()||"Parent";try{const j=await api("/api/family/create",{method:"POST",body:JSON.stringify({familyName:"Mission Maison",memberName:profile.memberName,timezone:"America/Toronto"})});Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:j.version||0});saveProf();dirty=true;await pushCloud();render();toast("Famille créée ✅")}catch(e){toast("Impossible : "+e.message)}}
 async function joinFamily(){profile.memberName=document.querySelector("#joinName").value.trim()||"Appareil";const code=document.querySelector("#joinCode").value.trim().toUpperCase();if(!code)return toast("Entre le code famille");try{const j=await api("/api/family/join",{method:"POST",body:JSON.stringify({joinCode:code,memberName:profile.memberName})});Object.assign(profile,{token:j.token,memberId:j.memberId,familyId:j.familyId,joinCode:j.joinCode,cloudVersion:0});saveProf();dirty=false;await pullCloud(true);view="today";render();toast("Famille rejointe ✅")}catch(e){toast("Impossible : "+e.message)}}
 async function pushCloud(){if(!profile.token||busy)return;busy=true;try{const j=await api("/api/state",{method:"PUT",body:JSON.stringify({version:Number(profile.cloudVersion||0),data})});profile.cloudVersion=Number(j.version||0);saveProf();dirty=false}catch(e){if(e.status===409&&e.data?.data){data=normalize(e.data.data);profile.cloudVersion=Number(e.data.version||0);saveProf();dirty=false;localStorage.setItem(STORE,JSON.stringify(data));render();toast("Une autre modification est arrivée — réessaie")}else toast("Sync à vérifier")}finally{busy=false}}
-async function pullCloud(force=false){if(!profile.token||busy||(dirty&&!force))return;busy=true;try{const j=await api("/api/state");if(j.data?.schemaVersion===2){data=normalize(j.data);profile.cloudVersion=Number(j.version||0);saveProf();localStorage.setItem(STORE,JSON.stringify(data));render()}}catch(e){if(force)toast("Sync impossible : "+e.message)}finally{busy=false}}
+async function pullCloud(force=false){if(!profile.token||busy||(dirty&&!force))return;busy=true;try{const j=await api("/api/state");if(j.data?.schemaVersion===2){captureInstructionDraft();data=normalize(j.data);profile.cloudVersion=Number(j.version||0);saveProf();localStorage.setItem(STORE,JSON.stringify(data));if(!isEditingField())render()}}catch(e){if(force)toast("Sync impossible : "+e.message)}finally{busy=false}}
 function leaveFamily(){if(confirm("Déconnecter cet appareil?")){profile={apiUrl:API_DEFAULT,token:"",memberId:"",familyId:"",memberName:"",joinCode:"",cloudVersion:0};saveProf();render()}}
 
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;render()});
@@ -501,9 +525,10 @@ async function installApp(){if(!installPrompt)return toast("Menu du navigateur �
 function isStandalone(){return window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true}
 
 function render(){
+ captureInstructionDraft();
  if(!child(active))active=data.children[0]?.id;
  const body=view==="today"?todayView():view==="history"?historyView():view==="week"?weekView():view==="month"?monthView():familyView();
- document.querySelector("#app").innerHTML='<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Comportements, consignes et aide parent — simple et rapide</div><div class="sync">'+(profile.token?"☁️ "+esc(profile.memberName)+" · "+esc(profile.joinCode):"☁️ Partage à activer")+'</div></div>'+tabs()+'</div>'+(!isStandalone()?'<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>':'')+body+'<div class="footer">Mission Maison · '+(profile.token?"synchronisée ✅":"locale")+' · v3.4 ÉCHÉANCES FLEXIBLES</div></div><button id="undoBtn" class="undo" onclick="undoLast()" '+(!undoStack.length?'disabled':'')+'>↩️ Annuler</button>';
+ document.querySelector("#app").innerHTML='<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Comportements, consignes et aide parent — simple et rapide</div><div class="sync">'+(profile.token?"☁️ "+esc(profile.memberName)+" · "+esc(profile.joinCode):"☁️ Partage à activer")+'</div></div>'+tabs()+'</div>'+(!isStandalone()?'<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>':'')+body+'<div class="footer">Mission Maison · '+(profile.token?"synchronisée ✅":"locale")+' · v3.4.1 BROUILLON CONSIGNE</div></div><button id="undoBtn" class="undo" onclick="undoLast()" '+(!undoStack.length?'disabled':'')+'>↩️ Annuler</button>';
  tickTimers();renderUndoState();
 }
 
