@@ -27,7 +27,8 @@ button,input,select,textarea{font:inherit}.wrap{max-width:1000px;margin:auto;pad
 .quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.quick .btn{min-height:52px;text-align:left}.coachGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:8px}.coachGrid .btn{text-align:left;min-height:48px}
 .notice{border:1px dashed #475569;background:#0b1322;border-radius:14px;padding:11px;color:#cbd5e1}.notice.warn{border-color:#92400e;background:#25170a;color:#fed7aa}.notice.good{border-color:#166534;background:#082b18;color:#bbf7d0}.pill{background:#263244;border-radius:99px;padding:5px 8px;font-size:12px;font-weight:900}.stat{display:flex;justify-content:space-between;gap:8px;align-items:center}.code{text-align:center;color:var(--yellow);font-size:30px;font-weight:950;letter-spacing:4px;padding:10px}
 .verdict{font-size:20px;font-weight:950;padding:12px;border-radius:14px;background:#0b1322;border:1px solid #334155;margin:10px 0}.status{display:inline-block;border-radius:99px;padding:5px 8px;font-size:11px;font-weight:900;margin-top:6px}.pending{background:#0c4a6e;color:#bae6fd}.done{background:#14532d;color:#bbf7d0}.bad{background:#7f1d1d;color:#fecaca}.neutral{background:#334155;color:#e2e8f0}.locked{background:#3f3f46;color:#e4e4e7}
-.timerClock{font-size:31px;font-weight:950;color:#fca5a5;letter-spacing:1px}.row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.deltaUp{color:#86efac;font-weight:900}.deltaDown{color:#fca5a5;font-weight:900}.deltaSame{color:#cbd5e1;font-weight:900}
+.timerClock{font-size:31px;font-weight:950;color:#fca5a5;letter-spacing:1px}.row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.kidPick{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}.kidCheck{display:flex;align-items:center;gap:6px;background:#263244;border:1px solid #475569;border-radius:999px;padding:8px 10px;font-weight:850}.kidCheck input{width:auto;margin:0}.deadline{margin-top:7px;font-weight:900}.deadline.ok{color:#fde68a}.deadline.over{color:#fca5a5}.shared{color:#bae6fd;font-size:12px;margin-top:4px}.deltaUp{color:#86efac;font-weight:900}.deltaDown{color:#fca5a5;font-weight:900}.deltaSame{color:#cbd5e1;font-weight:900}
 h2,h3{margin:5px 0 11px}.toast{position:fixed;left:50%;bottom:25px;transform:translateX(-50%);background:#020617;border:1px solid #475569;border-radius:13px;padding:11px 15px;font-weight:850;z-index:9999;max-width:90vw;text-align:center}.hidden{display:none}.installBox{margin:12px 0}.footer{text-align:center;color:#94a3b8;font-size:11px;margin-top:20px}
 .undo{position:fixed;right:14px;bottom:18px;z-index:999;background:#f8fafc;color:#0f172a;border:0;border-radius:999px;padding:12px 15px;font-weight:950;box-shadow:0 8px 30px #0008}.undo:disabled{opacity:.45}.coachBox{border:1px solid #6d28d9;background:#1d1234;border-radius:16px;padding:13px;margin-top:10px}.coachTitle{font-weight:950;color:#ddd6fe;margin-bottom:7px}.coachSteps{margin:0;padding-left:20px;color:#ede9fe}.coachSteps li{margin:5px 0}.contextline{color:#cbd5e1;font-size:12px;margin-top:5px}
 .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.dow{text-align:center;color:#94a3b8;font-size:11px;font-weight:900;padding:5px}.calDay{min-height:61px;border:1px solid #334155;border-radius:11px;background:#121a2a;color:white;padding:6px;text-align:left;position:relative}.calDay.empty{opacity:.15}.calDay.green{background:#0d3a25;border-color:#166534}.calDay.orange{background:#3a260d;border-color:#92400e}.calDay.red{background:#3a1010;border-color:#991b1b}.calDay.gray{background:#1f2937}.calDay.today{box-shadow:0 0 0 2px #fbbf24 inset}.calNum{font-weight:950}.calScore{font-size:11px;position:absolute;bottom:5px;right:6px}.goal{border-left:4px solid #a78bfa;padding-left:10px}.rewardUnlocked{border-color:#166534;background:#082b18;color:#bbf7d0}.rewardLocked{border-color:#475569;background:#111827;color:#cbd5e1}.closeSummary{white-space:pre-line}.mini{font-size:11px;color:#94a3b8}
@@ -119,6 +120,7 @@ function normalize(x){
  }));
  if(!Array.isArray(x.behaviorEvents))x.behaviorEvents=[];
  if(!Array.isArray(x.instructions))x.instructions=[];
+ x.instructions=x.instructions.map(i=>({...i,childIds:Array.isArray(i.childIds)&&i.childIds.length?i.childIds:(i.childId?[i.childId]:[])}));
  if(!Array.isArray(x.punishments))x.punishments=[];
  if(!Array.isArray(x.dayClosures))x.dayClosures=[];
  if(!x.parentPin)x.parentPin="1234";
@@ -150,7 +152,9 @@ function saveProf(){localStorage.setItem(PROF,JSON.stringify(profile))}
 function child(id){return data.children.find(c=>c.id===id)}
 function choose(id){active=id;localStorage.setItem(ACTIVE,id);render()}
 function eventsFor(cid,dateStr){return data.behaviorEvents.filter(e=>e.childId===cid&&e.date===dateStr).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))}
-function instructionsFor(cid,dateStr){return data.instructions.filter(i=>i.childId===cid&&i.date===dateStr).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))}
+function instructionKids(i){return Array.isArray(i.childIds)&&i.childIds.length?i.childIds:(i.childId?[i.childId]:[])}
+function instructionKidNames(i){return instructionKids(i).map(id=>child(id)).filter(Boolean).map(c=>c.avatar+" "+c.name).join(" + ")}
+function instructionsFor(cid,dateStr){return data.instructions.filter(i=>instructionKids(i).includes(cid)&&i.date===dateStr).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))}
 function scoreFor(cid,dateStr){return eventsFor(cid,dateStr).reduce((n,e)=>n+Number(e.score||0),0)}
 function activePunishment(cid){return data.punishments.find(p=>p.childId===cid&&p.status==="active")}
 function fmtTime(ts){try{return new Date(ts).toLocaleTimeString("fr-CA",{hour:"2-digit",minute:"2-digit"})}catch{return""}}
@@ -193,29 +197,88 @@ function quickButtons(){
  ).join("")+'</div>';
 }
 
+function selectedInstructionKids(){
+ return [...document.querySelectorAll(".instructionKid:checked")].map(e=>e.value);
+}
+function instructionConsequenceValue(){
+ const el=document.querySelector("#instructionConsequence");let v=el?.value||"";
+ if(v==="custom"){const x=prompt("Conséquence si ce n’est pas fait :");return (x||"").trim()}
+ return v;
+}
+function instructionDeadlineFromUI(){
+ const mode=document.querySelector("#instructionDeadlineMode")?.value||"none";
+ const clockVal=document.querySelector("#instructionClock")?.value||"20:00";
+ const created=new Date();
+ if(mode==="none")return {deadlineAt:"",deadlineType:"none",deadlineLabel:"Aucune limite",minutes:0};
+ if(mode.startsWith("mins:")){
+  const mins=Number(mode.split(":")[1]||0);
+  return {deadlineAt:new Date(created.getTime()+mins*60000).toISOString(),deadlineType:"minutes",deadlineLabel:mins>=60?(mins/60)+" h":mins+" min",minutes:mins};
+ }
+ if(mode==="eod"){
+  const d=new Date();d.setHours(23,59,59,999);
+  return {deadlineAt:d.toISOString(),deadlineType:"endofday",deadlineLabel:"Avant la fin de la journée",minutes:0};
+ }
+ if(mode==="bedtime"||mode==="clock"){
+  const [h,m]=clockVal.split(":").map(Number),d=new Date();d.setHours(h||0,m||0,0,0);
+  if(d.getTime()<=Date.now())d.setDate(d.getDate()+1);
+  return {deadlineAt:d.toISOString(),deadlineType:mode,deadlineLabel:(mode==="bedtime"?"Avant le coucher · ":"Avant ")+clockVal,minutes:0};
+ }
+ return {deadlineAt:"",deadlineType:"none",deadlineLabel:"Aucune limite",minutes:0};
+}
+function updateInstructionTimeUI(){
+ const mode=document.querySelector("#instructionDeadlineMode")?.value||"none";
+ const wrap=document.querySelector("#instructionClockWrap");
+ if(wrap)wrap.style.display=(mode==="bedtime"||mode==="clock")?"block":"none";
+ const lbl=document.querySelector("#instructionClockLabel");
+ if(lbl)lbl.textContent=mode==="bedtime"?"Heure du coucher":"Heure limite";
+}
 function addInstruction(){
- const input=document.querySelector("#instructionText"),title=(input?.value||"").trim();if(!title)return toast("Écris la consigne");rememberUndo();
- data.instructions.push({id:uid("ins"),childId:active,date:day(),title,status:"pending",createdAt:now()});save();toast("Consigne ajoutée");
+ const input=document.querySelector("#instructionText"),title=(input?.value||"").trim();if(!title)return toast("Écris la consigne");
+ const kids=selectedInstructionKids();if(!kids.length)return toast("Choisis au moins un enfant");
+ const consequence=instructionConsequenceValue(),dl=instructionDeadlineFromUI();rememberUndo();
+ const created=now();
+ data.instructions.push({id:uid("ins"),childId:kids[0],childIds:kids,date:day(),title,status:"pending",createdAt:created,minutes:dl.minutes,deadlineAt:dl.deadlineAt,deadlineType:dl.deadlineType,deadlineLabel:dl.deadlineLabel,consequence});
+ save();toast("Consigne ajoutée à "+kids.length+" enfant"+(kids.length>1?"s":""));
+}
+function startPunishmentForChild(cid,mins,reason,scoreEvent=true){
+ const c=child(cid);if(!c)return;
+ const old=activePunishment(cid);if(old){old.status="stopped";old.stoppedAt=now()}
+ const p={id:uid("pun"),childId:cid,date:day(),reason,minutes:mins,startedAt:now(),endAt:new Date(Date.now()+mins*60000).toISOString(),status:"active"};
+ data.punishments.push(p);
+ data.behaviorEvents.push({id:uid("ev"),childId:cid,date:day(),type:"punishment",label:"Punition "+mins+" min — "+reason,icon:"⏱️",score:scoreEvent?-2:0,createdAt:now(),source:"punishment",refId:p.id});
+ requestWakeLock();
+}
+function applyInstructionConsequence(i){
+ const consequence=(i.consequence||"").trim();if(!consequence)return;
+ const m=consequence.match(/^Punition (\d+) min$/i);
+ if(m){instructionKids(i).forEach(cid=>startPunishmentForChild(cid,Number(m[1]),"Consigne non faite : "+i.title,false));return}
+ instructionKids(i).forEach(cid=>data.behaviorEvents.push({id:uid("ev"),childId:cid,date:i.date,type:"consequence",label:"Conséquence — "+consequence,icon:"⚖️",score:0,createdAt:now(),source:"instruction_consequence",refId:i.id}));
 }
 function completeInstruction(id,outcome){
  const i=data.instructions.find(x=>x.id===id),o=OUTCOMES[outcome];if(!i||!o)return;rememberUndo();
- i.status=outcome;i.completedAt=now();data.behaviorEvents=data.behaviorEvents.filter(e=>e.refId!==id);
- data.behaviorEvents.push({id:uid("ev"),childId:i.childId,date:i.date,type:"instruction_"+outcome,label:i.title+" — "+o.label,icon:o.icon,score:o.score,createdAt:now(),source:"instruction",refId:id,coach:o.coach});save();
+ i.status=outcome;i.completedAt=now();data.behaviorEvents=data.behaviorEvents.filter(e=>e.refId!==id||e.source==="punishment");
+ instructionKids(i).forEach(cid=>data.behaviorEvents.push({id:uid("ev"),childId:cid,date:i.date,type:"instruction_"+outcome,label:i.title+" — "+o.label,icon:o.icon,score:o.score,createdAt:now(),source:"instruction",refId:id,coach:o.coach}));
+ if(outcome==="notdone"||outcome==="refusal")applyInstructionConsequence(i);
+ save();syncWakeLock();
 }
+function instructionRemaining(i){return i.deadlineAt?new Date(i.deadlineAt).getTime()-Date.now():null}
 function instructionRow(i){
- const o=OUTCOMES[i.status];
- return '<div class="instruction"><div class="emoji">'+(o?.icon||"📋")+'</div><div class="grow"><div class="title">'+esc(i.title)+'</div>'+
+ const o=OUTCOMES[i.status],kids=instructionKids(i),shared=kids.length>1?'<div class="shared">👥 '+esc(instructionKidNames(i))+'</div>':'',rem=instructionRemaining(i),hasTime=!!i.deadlineAt;
+ const dlLabel=i.deadlineLabel&&i.deadlineLabel!=="Aucune limite"?'<div class="small">🕒 '+esc(i.deadlineLabel)+'</div>':'';
+ const timeLine=hasTime?(rem>0?'<div class="deadline ok" data-instruction-timer="'+i.id+'">⏳ Temps restant : '+clock(rem)+'</div>':'<div class="deadline over" data-instruction-timer="'+i.id+'">⏰ Temps écoulé</div>'):'';
+ const consequence=i.consequence?'<div class="small">⚖️ Si non fait : '+esc(i.consequence)+'</div>':'';
+ return '<div class="instruction"><div class="emoji">'+(o?.icon||"📋")+'</div><div class="grow"><div class="title">'+esc(i.title)+'</div>'+shared+timeLine+consequence+
   (i.status==="pending"
    ?'<span class="status pending">En attente</span><div class="actions">'+
-    '<button class="btn success" onclick="completeInstruction(\''+i.id+'\',\'first\')">✅ Sans rappel</button>'+
-    '<button class="btn secondary" onclick="completeInstruction(\''+i.id+'\',\'one\')">🙂 1 rappel</button>'+
-    '<button class="btn orange" onclick="completeInstruction(\''+i.id+'\',\'many\')">⚠️ Plusieurs</button>'+
-    '<button class="btn danger" onclick="completeInstruction(\''+i.id+'\',\'notdone\')">❌ Pas fait</button>'+
-    '<button class="btn danger" onclick="completeInstruction(\''+i.id+'\',\'refusal\')">😤 Refus</button></div>'
+    '<button class="btn success" onclick="completeInstruction(\''+i.id+'\',\'first\')">✅ Fait +2</button>'+
+    '<button class="btn secondary" onclick="completeInstruction(\''+i.id+'\',\'one\')">🙂 1 rappel +1</button>'+
+    '<button class="btn orange" onclick="completeInstruction(\''+i.id+'\',\'many\')">⚠️ Plusieurs -1</button>'+
+    '<button class="btn danger" onclick="completeInstruction(\''+i.id+'\',\'notdone\')">❌ Pas fait -2</button>'+
+    '<button class="btn danger" onclick="completeInstruction(\''+i.id+'\',\'refusal\')">😤 Refus -3</button></div>'
    :'<span class="status '+(o.score>0?"done":o.score<0?"bad":"neutral")+'">'+esc(o.label)+'</span><div class="actions"><button class="btn secondary" onclick="resetInstruction(\''+i.id+'\')">↩️ Modifier résultat</button>'+(o.coach&&o.score<0?'<button class="btn purple" onclick="showCoach(\''+o.coach+'\')">💡 Quoi faire?</button>':'')+'</div>')+
  '</div></div>';
 }
-function resetInstruction(id){const i=data.instructions.find(x=>x.id===id);if(!i)return;rememberUndo();i.status="pending";delete i.completedAt;data.behaviorEvents=data.behaviorEvents.filter(e=>e.refId!==id);save()}
+function resetInstruction(id){const i=data.instructions.find(x=>x.id===id);if(!i)return;rememberUndo();i.status="pending";delete i.completedAt;data.behaviorEvents=data.behaviorEvents.filter(e=>e.refId!==id);data.punishments=data.punishments.filter(p=>!(p.reason||"").includes("Consigne non faite : "+i.title));save();syncWakeLock()}
 
 function addNote(text,voice=false){
  text=(text||"").trim();if(!text)return toast("Écris ou dicte une note");rememberUndo();
@@ -289,24 +352,30 @@ function alarm(p){
  const c=child(p.childId);toast("⏰ Punition terminée — "+(c?.name||"Enfant"));
  setTimeout(()=>stopAlarmSound(),3200);
 }
+function selectedPunishmentReason(){
+ const v=document.querySelector("#punishReason")?.value||"Refus / obstination";
+ if(v==="Autre..."){const x=prompt("Raison de la punition :");return (x||"Punition").trim()||"Punition"}
+ return v;
+}
 function startPunishment(mins){
  const c=child(active);if(!c)return;ensureAudio();
- const reason=(document.querySelector("#punishReason")?.value||"Punition").trim()||"Punition";
- const old=activePunishment(active);if(old&&!confirm("Un chrono est déjà actif pour "+c.name+". Le remplacer?"))return;
+ const reason=selectedPunishmentReason();const old=activePunishment(active);
+ if(old&&!confirm("Un chrono est déjà actif pour "+c.name+". Le remplacer?"))return;
  rememberUndo();if(old){old.status="stopped";old.stoppedAt=now()}
  const p={id:uid("pun"),childId:active,date:day(),reason,minutes:mins,startedAt:now(),endAt:new Date(Date.now()+mins*60000).toISOString(),status:"active"};
- data.punishments.push(p);data.behaviorEvents.push({id:uid("ev"),childId:active,date:day(),type:"punishment",label:"Punition "+mins+" min — "+reason,icon:"⏱️",score:-2,createdAt:now(),source:"punishment",refId:p.id,coach:"general"});
- requestWakeLock();save();toast("⏱️ Chrono "+mins+" min démarré — écran gardé éveillé");
+ data.punishments.push(p);data.behaviorEvents.push({id:uid("ev"),childId:active,date:day(),type:"punishment",label:"Punition "+mins+" min — "+reason,icon:"⏱️",score:-2,createdAt:now(),source:"punishment",refId:p.id});
+ requestWakeLock();save();toast("⏱️ "+reason+" · "+mins+" min");
 }
 function stopPunishment(id){const p=data.punishments.find(x=>x.id===id);if(!p||p.status!=="active")return;rememberUndo();p.status="stopped";p.stoppedAt=now();stopAlarmSound();save();syncWakeLock();toast("Chrono arrêté")}
 function addPunishTime(id,mins){const p=data.punishments.find(x=>x.id===id);if(!p||p.status!=="active")return;rememberUndo();p.endAt=new Date(new Date(p.endAt).getTime()+mins*60000).toISOString();p.minutes+=mins;save()}
 function remaining(p){return Math.max(0,new Date(p.endAt).getTime()-Date.now())}
-function clock(ms){const s=Math.ceil(ms/1000),m=Math.floor(s/60);return pad(m)+":"+pad(s%60)}
+function clock(ms){const s=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return h>0?h+":"+pad(m)+":"+pad(sec):pad(m)+":"+pad(sec)}
 function timerPanel(){
  const p=activePunishment(active);if(!p)return '<div class="notice">Aucun chrono actif pour cet enfant.</div>';
  return '<div class="timerBox"><div class="emoji">⏱️</div><div class="grow"><div class="title">'+esc(p.reason)+'</div><div class="timerClock" data-timer="'+p.id+'">'+clock(remaining(p))+'</div><div class="small">Punition de '+p.minutes+' min · écran gardé éveillé pendant le chrono</div><div class="actions"><button class="btn secondary" onclick="addPunishTime(\''+p.id+'\',5)">+5 min</button><button class="btn danger" onclick="stopPunishment(\''+p.id+'\')">Arrêter</button></div></div></div>';
 }
 function tickTimers(){
+ document.querySelectorAll("[data-instruction-timer]").forEach(el=>{const i=data.instructions.find(x=>x.id===el.dataset.instructionTimer);if(!i||!i.deadlineAt)return;const ms=instructionRemaining(i);el.textContent=ms>0?"⏳ Temps restant : "+clock(ms):"⏰ Temps écoulé";el.className="deadline "+(ms>0?"ok":"over")});
  let changed=false;data.punishments.filter(p=>p.status==="active").forEach(p=>{const ms=remaining(p),el=document.querySelector('[data-timer="'+p.id+'"]');if(el)el.textContent=clock(ms);if(ms<=0){p.status="ended";p.endedAt=now();changed=true;if(Date.now()-new Date(p.endAt).getTime()<120000)alarm(p)}});if(changed){save();syncWakeLock()}
 }
 function requestTimerAlerts(){ensureAudio();playTone(880,450,0);requestWakeLock().then(ok=>toast(ok?"Son prêt + écran gardé éveillé ✅":"Son prêt ✅"))}
@@ -343,12 +412,19 @@ function dayVerdict(cid,dateStr){
 }
 function isClosed(cid,dateStr){return data.dayClosures.find(x=>x.childId===cid&&x.date===dateStr)}
 
+function instructionKidPicker(){
+ return '<div class="small" style="margin-top:9px"><b>Pour qui?</b> — tu peux choisir plusieurs enfants</div><div class="kidPick">'+data.children.map(c=>'<label class="kidCheck"><input class="instructionKid" type="checkbox" value="'+c.id+'" '+(c.id===active?'checked':'')+'> '+c.avatar+' '+esc(c.name)+'</label>').join("")+'</div>';
+}
+function instructionOptions(){
+ return '<div class="form"><select id="instructionDeadlineMode" onchange="updateInstructionTimeUI()"><option value="none">∞ Aucun temps limite</option><option value="mins:5">5 min</option><option value="mins:10">10 min</option><option value="mins:15">15 min</option><option value="mins:20">20 min</option><option value="mins:30">30 min</option><option value="mins:45">45 min</option><option value="mins:60">1 h</option><option value="mins:120">2 h</option><option value="mins:180">3 h</option><option value="bedtime">🌙 Avant le coucher</option><option value="eod">📅 Avant la fin de la journée</option><option value="clock">🕐 Choisir une heure</option></select><select id="instructionConsequence"><option value="">⚖️ Aucune conséquence prévue</option><option>Punition 5 min</option><option>Punition 10 min</option><option>Punition 15 min</option><option>Punition 20 min</option><option>Pas d’écran 15 min</option><option>Pas d’écran 30 min</option><option>Pas d’écran 1 h</option><option>À terminer avant loisir</option><option value="custom">Autre...</option></select></div><div id="instructionClockWrap" class="form" style="display:none;margin-top:8px"><label class="small"><span id="instructionClockLabel">Heure limite</span><input id="instructionClock" type="time" value="20:00"></label></div>';
+}
+
 function todayView(){
  const c=child(active)||data.children[0],ins=instructionsFor(c.id,day()),ev=eventsFor(c.id,day()),closed=isClosed(c.id,day());
  return childCards()+
  '<div class="card"><div class="stat"><h2>'+c.avatar+' '+esc(c.name)+'</h2><span class="pill">Bilan du jour '+(scoreFor(c.id,day())>=0?"+":"")+scoreFor(c.id,day())+'</span></div>'+goalCard(c)+(closed?'<div class="notice good">🌙 Journée fermée à '+fmtTime(closed.closedAt)+' — tu peux quand même corriger puis la refermer.</div>':'')+trendToday(c.id)+'<h3>⚡ Noter vite</h3>'+quickButtons()+'</div>'+ 
- '<div class="card"><h2>📋 Consigne donnée</h2><div class="notice">Exemple : « Faire sa chambre ». Ensuite, tu notes seulement comment ça s’est passé.</div><div class="form"><input id="instructionText" list="suggestions" placeholder="Ex. Faire sa chambre"><datalist id="suggestions"><option value="Faire sa chambre"><option value="Ranger ses choses"><option value="Mettre la table"><option value="Prendre sa douche"><option value="Faire ses devoirs"></datalist><button class="btn primary" onclick="addInstruction()">Ajouter la consigne</button></div>'+ins.map(instructionRow).join("")+'</div>'+ 
- '<div class="card"><h2>⏱️ Punition avec chrono</h2><div class="form"><input id="punishReason" placeholder="Raison" value="Refus / obstination"><button class="btn secondary" onclick="requestTimerAlerts()">🔊 Tester son / écran</button></div><div class="actions">'+timerButtons(c)+'</div>'+timerPanel()+'</div>'+ 
+ '<div class="card"><h2>📋 Consigne donnée</h2><div class="notice">Tu peux donner la même consigne à plusieurs enfants, choisir un temps limite et prévoir la conséquence si elle n’est pas faite.</div><div class="form"><input id="instructionText" list="suggestions" placeholder="Ex. Ranger la chambre"><datalist id="suggestions"><option value="Ranger la chambre"><option value="Ranger ses choses"><option value="Mettre la table"><option value="Prendre sa douche"><option value="Faire ses devoirs"></datalist><button class="btn primary" onclick="addInstruction()">Ajouter la consigne</button></div>'+instructionKidPicker()+instructionOptions()+ins.map(instructionRow).join("")+'</div>'+ 
+ '<div class="card"><h2>⏱️ Punition avec chrono</h2><div class="form"><select id="punishReason"><option>Refus / obstination</option><option>N’écoute pas / il faut répéter</option><option>Manque de respect</option><option>Frappe / agressivité</option><option>Crise / colère</option><option>Conflit écran</option><option>Consigne non faite</option><option>Autre...</option></select><button class="btn secondary" onclick="requestTimerAlerts()">🔊 Tester son / écran</button></div><div class="actions">'+timerButtons(c)+'</div>'+timerPanel()+'</div>'+ 
  '<div class="card"><h2>🎙️ Note rapide</h2><div class="form"><input id="noteText" placeholder="Ex. A aidé son frère à ranger"><button class="btn secondary" onclick="dictateNote()">🎙️ Dicter</button><button class="btn primary" onclick="addTypedNote()">Ajouter note</button></div></div>'+ 
  coachPanel()+
  '<div class="card"><h2>📝 Aujourd’hui</h2>'+(ev.length?ev.map(eventRow).join(""):'<div class="notice">🙂 Journée neutre pour l’instant : rien de mal noté, rien de spécial non plus.</div>')+'<button class="btn big primary" onclick="closeToday()">🌙 Résumer et fermer la journée</button></div>';
@@ -427,7 +503,7 @@ function isStandalone(){return window.matchMedia("(display-mode: standalone)").m
 function render(){
  if(!child(active))active=data.children[0]?.id;
  const body=view==="today"?todayView():view==="history"?historyView():view==="week"?weekView():view==="month"?monthView():familyView();
- document.querySelector("#app").innerHTML='<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Comportements, consignes et aide parent — simple et rapide</div><div class="sync">'+(profile.token?"☁️ "+esc(profile.memberName)+" · "+esc(profile.joinCode):"☁️ Partage à activer")+'</div></div>'+tabs()+'</div>'+(!isStandalone()?'<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>':'')+body+'<div class="footer">Mission Maison · '+(profile.token?"synchronisée ✅":"locale")+' · v3.2.1 COACH PARENT</div></div><button id="undoBtn" class="undo" onclick="undoLast()" '+(!undoStack.length?'disabled':'')+'>↩️ Annuler</button>';
+ document.querySelector("#app").innerHTML='<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Comportements, consignes et aide parent — simple et rapide</div><div class="sync">'+(profile.token?"☁️ "+esc(profile.memberName)+" · "+esc(profile.joinCode):"☁️ Partage à activer")+'</div></div>'+tabs()+'</div>'+(!isStandalone()?'<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>':'')+body+'<div class="footer">Mission Maison · '+(profile.token?"synchronisée ✅":"locale")+' · v3.4 ÉCHÉANCES FLEXIBLES</div></div><button id="undoBtn" class="undo" onclick="undoLast()" '+(!undoStack.length?'disabled':'')+'>↩️ Annuler</button>';
  tickTimers();renderUndoState();
 }
 
