@@ -80,7 +80,9 @@ const BEHAVIORS={
  repeat:{icon:"⚠️",label:"A fallu répéter",score:-1,coach:"repeat"},
  argue:{icon:"😤",label:"S'est obstiné",score:-2,coach:"argue"},
  disrespect:{icon:"🗯️",label:"Manque de respect",score:-3,coach:"disrespect"},
- bad:{icon:"👎",label:"Mauvais comportement",score:-2,coach:"general"}
+ bad:{icon:"👎",label:"Mauvais comportement",score:-2,coach:"general"},
+ bedtime_good:{icon:"😴",label:"Coucher facile / ça va bien",score:2,coach:"praise"},
+ bedtime_bad:{icon:"😵",label:"Coucher difficile / ça va mal",score:-2,coach:"bedtime"}
 };
 
 const OUTCOMES={
@@ -100,6 +102,7 @@ const COACH={
  aggression:{title:"💥 Il frappe / devient agressif",steps:["Sécurise d'abord les personnes : sépare les enfants si nécessaire.","Utilise peu de mots : « Je ne te laisse pas frapper. »","Attends le retour au calme avant de discuter ou demander des explications.","Après coup, travaille une alternative concrète : s'éloigner, demander de l'aide, utiliser des mots.","Si l'agressivité est fréquente, intense ou dangereuse, demande conseil à un professionnel qui connaît l'enfant."]},
  tantrum:{title:"😭 Crise / grosse colère",steps:["Assure d'abord la sécurité.","Réduis les paroles pendant le pic de la crise.","Évite d'accorder ce qui avait été refusé uniquement pour arrêter la crise.","Quand il est calmé, reconnecte puis rappelle brièvement la limite.","Valorise le retour au calme et les mots utilisés pour exprimer ce qu'il voulait."]},
  screens:{title:"📱 Conflit autour des écrans",steps:["Annonce la fin à l'avance quand c'est possible.","Utilise une règle prévisible plutôt qu'une négociation différente chaque fois.","Propose immédiatement l'étape suivante : douche, repas, jeu, rangement, etc.","Si la règle est refusée, applique la conséquence annoncée sans ajouter plusieurs nouvelles menaces."]},
+ bedtime:{title:"🌙 Coucher difficile",steps:["Garde une routine courte et prévisible, dans le même ordre.","Annonce clairement la prochaine étape : pyjama, dents, puis lit.","Donne une consigne à la fois plutôt que plusieurs rappels en même temps.","Évite de repartir une longue négociation une fois la routine commencée.","Quand un coucher va mieux, souligne précisément ce qui a bien été fait."]},
  praise:{title:"🌟 Renforcer ce bon comportement",steps:["Dis précisément ce que tu as aimé, pas seulement « bravo ».","Fais-le rapidement après le comportement.","Exemple : « J'ai vu que tu as rangé sans que je te le demande, merci. »"]},
  general:{title:"🧭 Mauvais comportement",steps:["Nommer le comportement précis que tu veux arrêter.","Dire clairement ce que tu veux voir à la place.","Donner un avertissement seulement si tu es prêt à appliquer la conséquence.","Renforcer rapidement le prochain bon comportement."]}
 };
@@ -231,10 +234,17 @@ function addBehavior(cid,type){
 }
 function contextSelector(){return '<div class="form"><select id="contextSelect"><option value="">Contexte négatif (optionnel)</option>'+CONTEXTS.filter(Boolean).map(x=>'<option>'+esc(x)+'</option>').join("")+'</select></div>'}
 function quickButtons(){
- return contextSelector()+'<div class="quick">'+Object.entries(BEHAVIORS).map(([k,b])=>
+ return contextSelector()+'<div class="quick">'+Object.entries(BEHAVIORS).filter(([k])=>!k.startsWith("bedtime_")).map(([k,b])=>
   '<button class="btn '+(b.score>0?"success":b.score<-1?"danger":"secondary")+'" onclick="addBehavior(\''+active+'\',\''+k+'\')">'+b.icon+' '+esc(b.label)+'</button>'
  ).join("")+'</div>';
 }
+function bedtimeButtons(){
+ return '<div class="quick">'+
+  '<button class="btn success" onclick="addBehavior(\''+active+'\',\'bedtime_good\')">😴 Coucher facile / ça va bien</button>'+
+  '<button class="btn danger" onclick="addBehavior(\''+active+'\',\'bedtime_bad\')">😵 Coucher difficile / ça va mal</button>'+
+ '</div>';
+}
+
 
 function selectedInstructionKids(){
  return [...document.querySelectorAll(".instructionKid:checked")].map(e=>e.value);
@@ -467,7 +477,7 @@ function instructionOptions(){
 function todayView(){
  const c=child(active)||data.children[0],ins=instructionsFor(c.id,day()),ev=eventsFor(c.id,day()),closed=isClosed(c.id,day());
  return childCards()+
- '<div class="card"><div class="stat"><h2>'+c.avatar+' '+esc(c.name)+'</h2><span class="pill">Bilan du jour '+(scoreFor(c.id,day())>=0?"+":"")+scoreFor(c.id,day())+'</span></div>'+goalCard(c)+(closed?'<div class="notice good">🌙 Journée fermée à '+fmtTime(closed.closedAt)+' — tu peux quand même corriger puis la refermer.</div>':'')+trendToday(c.id)+'<h3>⚡ Noter vite</h3>'+quickButtons()+'</div>'+ 
+ '<div class="card"><div class="stat"><h2>'+c.avatar+' '+esc(c.name)+'</h2><span class="pill">Bilan du jour '+(scoreFor(c.id,day())>=0?"+":"")+scoreFor(c.id,day())+'</span></div>'+goalCard(c)+(closed?'<div class="notice good">🌙 Journée fermée à '+fmtTime(closed.closedAt)+' — tu peux quand même corriger puis la refermer.</div>':'')+trendToday(c.id)+'<h3>⚡ Noter vite</h3>'+quickButtons()+'<h3 style="margin-top:16px">🌙 Coucher</h3>'+bedtimeButtons()+'</div>'+ 
  '<div class="card"><h2>📋 Consigne donnée</h2><div class="notice">Tu peux donner la même consigne à plusieurs enfants, choisir un temps limite et prévoir la conséquence si elle n’est pas faite.</div><div class="form"><input id="instructionText" list="suggestions" placeholder="Ex. Ranger la chambre" value="'+esc(instructionDraft?.title||'')+'" oninput="captureInstructionDraft()"><datalist id="suggestions"><option value="Ranger la chambre"><option value="Ranger ses choses"><option value="Mettre la table"><option value="Prendre sa douche"><option value="Faire ses devoirs"></datalist><button class="btn primary" onclick="addInstruction()">Ajouter la consigne</button></div>'+instructionKidPicker()+instructionOptions()+ins.map(instructionRow).join("")+'</div>'+ 
  '<div class="card"><h2>⏱️ Punition avec chrono</h2><div class="form"><select id="punishReason" onchange="capturePunishmentDraft()">'+punishmentReasonOptions()+'</select><button class="btn secondary" onclick="requestTimerAlerts()">🔊 Tester son / écran</button></div><div class="actions">'+timerButtons(c)+'</div>'+timerPanel()+'</div>'+ 
  '<div class="card"><h2>🎙️ Note rapide</h2><div class="form"><input id="noteText" placeholder="Ex. A aidé son frère à ranger"><button class="btn secondary" onclick="dictateNote()">🎙️ Dicter</button><button class="btn primary" onclick="addTypedNote()">Ajouter note</button></div></div>'+ 
@@ -486,7 +496,8 @@ function weekData(cid,anchor){
  const start=mondayOf(anchor),end=addDays(start,6),ev=data.behaviorEvents.filter(e=>e.childId===cid&&e.date>=start&&e.date<=end),score=ev.reduce((n,e)=>n+Number(e.score||0),0),pos=ev.filter(e=>e.score>0).length,neg=ev.filter(e=>e.score<0).length,pun=ev.filter(e=>e.type==="punishment").length;
  const outcomes={first:0,one:0,many:0,notdone:0,refusal:0};ev.forEach(e=>{const k=String(e.type||"").replace("instruction_","");if(k in outcomes)outcomes[k]++});let verdict="⚪ Semaine neutre — rien de particulier noté";
  if(ev.length){if(score>=12&&neg<=2)verdict="🌟 Excellente semaine";else if(score>=5)verdict="🟢 Bonne semaine";else if(score>=-4)verdict="⚪ Semaine correcte";else if(score>=-10)verdict="🟠 Semaine à travailler";else verdict="🔴 Semaine difficile"}
- return {start,end,ev,score,pos,neg,pun,outcomes,verdict,goal:goalProgress(cid,start,end)};
+ const bedtimeGood=ev.filter(e=>e.type==="bedtime_good").length,bedtimeBad=ev.filter(e=>e.type==="bedtime_bad").length;
+ return {start,end,ev,score,pos,neg,pun,outcomes,verdict,bedtimeGood,bedtimeBad,goal:goalProgress(cid,start,end)};
 }
 function deltaText(cur,prev,positive=true){const d=cur-prev;if(d===0)return '<span class="deltaSame">= pareil</span>';const good=positive?d>0:d<0;return '<span class="'+(good?'deltaUp':'deltaDown')+'">'+(d>0?'▲ +':'▼ ')+d+' vs sem. passée</span>'}
 function shiftWeek(n){weekAnchor=addDays(mondayOf(weekAnchor),n*7);render()}
@@ -498,12 +509,13 @@ function weekView(){
   '<div class="grid"><div class="notice"><b>👍 Positifs</b><br>'+w.pos+'<br>'+deltaText(w.pos,prev.pos,true)+'</div><div class="notice"><b>⚠️ Négatifs</b><br>'+w.neg+'<br>'+deltaText(w.neg,prev.neg,false)+'</div><div class="notice"><b>⏱️ Punitions</b><br>'+w.pun+'<br>'+deltaText(w.pun,prev.pun,false)+'</div><div class="notice"><b>📋 Consignes réussies</b><br>'+(w.outcomes.first+w.outcomes.one)+'<br>'+deltaText(w.outcomes.first+w.outcomes.one,prev.outcomes.first+prev.outcomes.one,true)+'</div></div>'+ 
   (c.goalKey!=="none"?'<div class="notice goal" style="margin-top:10px"><b>'+goal.icon+' Objectif : '+esc(goal.label)+'</b><br>Signaux positifs : '+w.goal.good+' · difficultés liées : '+w.goal.bad+'<br>'+deltaText(w.goal.good,prev.goal.good,true)+'</div>':'')+
   (c.weeklyReward?'<div class="notice '+(rewardOk?'rewardUnlocked':'rewardLocked')+'" style="margin-top:10px"><b>'+(rewardOk?'🏆 Récompense débloquée':'🔒 Récompense pas encore débloquée')+'</b><br>'+esc(c.weeklyReward)+' · seuil : '+c.rewardMinScore+' points</div>':'')+
-  '<div class="small" style="margin-top:10px">Sans rappel: '+w.outcomes.first+' · 1 rappel: '+w.outcomes.one+' · plusieurs rappels: '+w.outcomes.many+' · pas fait: '+w.outcomes.notdone+' · refus: '+w.outcomes.refusal+'</div></div>';
+  '<div class="small" style="margin-top:10px">Sans rappel: '+w.outcomes.first+' · 1 rappel: '+w.outcomes.one+' · plusieurs rappels: '+w.outcomes.many+' · pas fait: '+w.outcomes.notdone+' · refus: '+w.outcomes.refusal+'</div>'+
+  '<div class="notice" style="margin-top:10px"><b>🌙 Couchers cette semaine</b><br>😴 Faciles : '+w.bedtimeGood+' · 😵 Difficiles : '+w.bedtimeBad+'</div></div>';
  }).join("");
 }
 
 function monthRange(key){const d=monthFromKey(key),start=day(d),e=new Date(d.getFullYear(),d.getMonth()+1,0,12);return {start,end:day(e)}}
-function monthData(cid,key){const r=monthRange(key),ev=data.behaviorEvents.filter(e=>e.childId===cid&&e.date>=r.start&&e.date<=r.end),score=ev.reduce((n,e)=>n+Number(e.score||0),0);return {r,ev,score,pos:ev.filter(e=>e.score>0).length,neg:ev.filter(e=>e.score<0).length,pun:ev.filter(e=>e.type==="punishment").length,instr:ev.filter(e=>e.type?.startsWith("instruction_")).length}}
+function monthData(cid,key){const r=monthRange(key),ev=data.behaviorEvents.filter(e=>e.childId===cid&&e.date>=r.start&&e.date<=r.end),score=ev.reduce((n,e)=>n+Number(e.score||0),0);return {r,ev,score,pos:ev.filter(e=>e.score>0).length,neg:ev.filter(e=>e.score<0).length,pun:ev.filter(e=>e.type==="punishment").length,instr:ev.filter(e=>e.type?.startsWith("instruction_")).length,bedtimeGood:ev.filter(e=>e.type==="bedtime_good").length,bedtimeBad:ev.filter(e=>e.type==="bedtime_bad").length}}
 function shiftMonth(n){const d=monthFromKey(monthAnchor);d.setMonth(d.getMonth()+n);monthAnchor=monthKey(d);render()}
 function calendarHtml(cid,key){
  const d=monthFromKey(key),year=d.getFullYear(),month=d.getMonth(),first=new Date(year,month,1,12),days=new Date(year,month+1,0,12).getDate(),offset=(first.getDay()+6)%7;let cells='';for(let i=0;i<offset;i++)cells+='<div class="calDay empty"></div>';
@@ -513,7 +525,7 @@ function calendarHtml(cid,key){
 function monthView(){
  const c=child(active)||data.children[0],m=monthData(c.id,monthAnchor),pd=monthFromKey(monthAnchor);pd.setMonth(pd.getMonth()-1);const prev=monthData(c.id,monthKey(pd));
  return childCards()+'<div class="card"><div class="row"><button class="btn secondary" onclick="shiftMonth(-1)">← Mois</button><div><h2>🗓️ '+monthFromKey(monthAnchor).toLocaleDateString("fr-CA",{month:"long",year:"numeric"})+'</h2><div class="small">Vert = positif · orange = mitigé · rouge = difficile · gris = neutre</div></div><button class="btn secondary" onclick="shiftMonth(1)">Mois →</button></div>'+calendarHtml(c.id,monthAnchor)+'</div>'+ 
- '<div class="card"><h2>📈 Bilan mensuel — '+esc(c.name)+'</h2><div class="grid"><div class="notice"><b>👍 Bons événements</b><br>'+m.pos+'<br>'+deltaText(m.pos,prev.pos,true).replace('sem.','mois')+'</div><div class="notice"><b>⚠️ Événements négatifs</b><br>'+m.neg+'<br>'+deltaText(m.neg,prev.neg,false).replace('sem.','mois')+'</div><div class="notice"><b>⏱️ Punitions</b><br>'+m.pun+'<br>'+deltaText(m.pun,prev.pun,false).replace('sem.','mois')+'</div><div class="notice"><b>📋 Consignes notées</b><br>'+m.instr+'<br>'+deltaText(m.instr,prev.instr,true).replace('sem.','mois')+'</div></div><div class="verdict">Score du mois : '+(m.score>=0?'+':'')+m.score+'</div></div>';
+ '<div class="card"><h2>📈 Bilan mensuel — '+esc(c.name)+'</h2><div class="grid"><div class="notice"><b>👍 Bons événements</b><br>'+m.pos+'<br>'+deltaText(m.pos,prev.pos,true).replace('sem.','mois')+'</div><div class="notice"><b>⚠️ Événements négatifs</b><br>'+m.neg+'<br>'+deltaText(m.neg,prev.neg,false).replace('sem.','mois')+'</div><div class="notice"><b>⏱️ Punitions</b><br>'+m.pun+'<br>'+deltaText(m.pun,prev.pun,false).replace('sem.','mois')+'</div><div class="notice"><b>📋 Consignes notées</b><br>'+m.instr+'<br>'+deltaText(m.instr,prev.instr,true).replace('sem.','mois')+'</div></div><div class="notice" style="margin-top:10px"><b>🌙 Couchers du mois</b><br>😴 Faciles : '+m.bedtimeGood+' · 😵 Difficiles : '+m.bedtimeBad+'</div><div class="verdict">Score du mois : '+(m.score>=0?'+':'')+m.score+'</div></div>';
 }
 
 function editChildBasic(id){const c=child(id);if(!c)return;const n=prompt("Nom :",c.name);if(n===null)return;const a=prompt("Emoji :",c.avatar);if(a===null)return;rememberUndo();c.name=n.trim()||c.name;c.avatar=a.trim()||c.avatar;save()}
@@ -550,7 +562,7 @@ function render(){
  capturePunishmentDraft();
  if(!child(active))active=data.children[0]?.id;
  const body=view==="today"?todayView():view==="history"?historyView():view==="week"?weekView():view==="month"?monthView():familyView();
- document.querySelector("#app").innerHTML='<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Comportements, consignes et aide parent — simple et rapide</div><div class="sync">'+(profile.token?"☁️ "+esc(profile.memberName)+" · "+esc(profile.joinCode):"☁️ Partage à activer")+'</div></div>'+tabs()+'</div>'+(!isStandalone()?'<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>':'')+body+'<div class="footer">Mission Maison · '+(profile.token?"synchronisée ✅":"locale")+' · v3.4.2 BROUILLONS FIX</div></div><button id="undoBtn" class="undo" onclick="undoLast()" '+(!undoStack.length?'disabled':'')+'>↩️ Annuler</button>';
+ document.querySelector("#app").innerHTML='<div class="wrap"><div class="top"><div><div class="brand">🏠⚡ MISSION MAISON</div><div class="sub">Comportements, consignes et aide parent — simple et rapide</div><div class="sync">'+(profile.token?"☁️ "+esc(profile.memberName)+" · "+esc(profile.joinCode):"☁️ Partage à activer")+'</div></div>'+tabs()+'</div>'+(!isStandalone()?'<div class="installBox"><button class="btn big primary" onclick="installApp()">📲 Installer Mission Maison</button></div>':'')+body+'<div class="footer">Mission Maison · '+(profile.token?"synchronisée ✅":"locale")+' · v3.5 COUCHER</div></div><button id="undoBtn" class="undo" onclick="undoLast()" '+(!undoStack.length?'disabled':'')+'>↩️ Annuler</button>';
  tickTimers();renderUndoState();
 }
 
